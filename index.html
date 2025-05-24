@@ -1074,6 +1074,7 @@
                                 <td>Blue-chip stocks with 5-12% growth rates</td>
                             </tr>
                             <tr>
+                               
                                 <td><strong>🚀 High Growth</strong></td>
                                 <td>Fast-growing companies</td>
                                 <td>Technology and growth stocks with 12-24% growth</td>
@@ -1273,9 +1274,29 @@
             }
         ];
 
+        // Debounce utility for autosave
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // Autosave with debounce
+        const triggerAutoSave = debounce(() => {
+            saveToLocalStorage();
+            if (portfolioState.currentTab === 'report') {
+                updateReportContent();
+            } else if (portfolioState.currentTab === 'overview') {
+                updateOverviewContent();
+            } else if (categories.find(c => c.id === portfolioState.currentTab)) {
+                updateCategoryContent(portfolioState.currentTab);
+            }
+        }, 500);
+
         // Print and PDF Functions
         function printReport() {
-            // Create a print-friendly version
             const printWindow = window.open('', '_blank');
             const reportContent = document.getElementById('reportContent').innerHTML;
             
@@ -1312,8 +1333,6 @@
             `);
             
             printWindow.document.close();
-            
-            // Auto-print after content loads
             printWindow.onload = function() {
                 setTimeout(() => {
                     printWindow.print();
@@ -1322,8 +1341,6 @@
         }
 
         function downloadPDF() {
-            // For now, use the print functionality as a PDF option
-            // Users can "Print to PDF" in their browser
             showNotification('Use your browser\'s "Print to PDF" option from the print dialog', 'success');
             printReport();
         }
@@ -1349,7 +1366,6 @@
                         saveStatus.className = 'save-status';
                     }, 500);
                 }
-                
             } catch (error) {
                 console.error('Error saving to localStorage:', error);
                 showNotification('Error saving data', 'error');
@@ -1364,7 +1380,6 @@
                     if (parsed.portfolioState) {
                         portfolioState = parsed.portfolioState;
                         
-                        // Update UI elements safely
                         const ageSlider = document.getElementById('ageSlider');
                         const clientNameInput = document.getElementById('clientNameInput');
                         
@@ -1404,15 +1419,19 @@
                 const blob = new Blob([jsonString], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 
+                const clientName = portfolioState.clientName || 'Portfolio';
+                const dateString = new Date().toISOString().split('T')[0];
+                const filename = `${clientName.replace(/[^a-zA-Z0-9]/g, '_')}-Pyramid-${dateString}.json`;
+                
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `portfolio-pyramid-${new Date().toISOString().split('T')[0]}.json`;
+                a.download = filename;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
-                showNotification('Portfolio exported successfully!', 'success');
+                showNotification(`Portfolio exported as: ${filename}`, 'success');
             } catch (error) {
                 console.error('Error exporting portfolio:', error);
                 showNotification('Error exporting portfolio', 'error');
@@ -1423,6 +1442,12 @@
             const file = event.target.files[0];
             if (!file) return;
             
+            if (!file.name.toLowerCase().endsWith('.json')) {
+                showNotification('Please select a valid .json file', 'error');
+                event.target.value = '';
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -1431,7 +1456,6 @@
                     if (importedData.portfolioState) {
                         portfolioState = importedData.portfolioState;
                         
-                        // Update UI elements
                         document.getElementById('ageSlider').value = portfolioState.age;
                         document.getElementById('clientNameInput').value = portfolioState.clientName || '';
                         document.getElementById('ageDisplay').textContent = portfolioState.age + ' years';
@@ -1441,7 +1465,6 @@
                         updatePortfolioSummary();
                         updateTabWarnings();
                         
-                        // Refresh current tab
                         if (portfolioState.currentTab === 'report') {
                             updateReportContent();
                         } else if (portfolioState.currentTab === 'overview') {
@@ -1450,9 +1473,7 @@
                             updateCategoryContent(portfolioState.currentTab);
                         }
                         
-                        // Save to localStorage
                         saveToLocalStorage();
-                        
                         showNotification('Portfolio imported successfully!', 'success');
                     } else {
                         throw new Error('Invalid file format');
@@ -1463,8 +1484,6 @@
                 }
             };
             reader.readAsText(file);
-            
-            // Clear the file input
             event.target.value = '';
         }
 
@@ -1472,7 +1491,6 @@
             if (confirm('Are you sure you want to clear all portfolio data? This action cannot be undone.')) {
                 localStorage.removeItem('portfolioPyramidData');
                 
-                // Reset to default state
                 portfolioState = {
                     age: 35,
                     clientName: '',
@@ -1503,7 +1521,6 @@
                     }
                 };
                 
-                // Reset UI
                 document.getElementById('ageSlider').value = 35;
                 document.getElementById('clientNameInput').value = '';
                 document.getElementById('ageDisplay').textContent = '35 years';
@@ -1519,7 +1536,6 @@
         }
 
         function showNotification(message, type = 'success') {
-            // Remove any existing notifications
             const existingNotifications = document.querySelectorAll('.notification');
             existingNotifications.forEach(n => n.remove());
             
@@ -1528,23 +1544,11 @@
             notification.textContent = message;
             document.body.appendChild(notification);
             
-            // Show notification
             setTimeout(() => notification.classList.add('show'), 100);
-            
-            // Hide notification after 3 seconds
             setTimeout(() => {
                 notification.classList.remove('show');
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
-        }
-
-        // Auto-save functionality
-        let saveTimeout;
-        function triggerAutoSave() {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                saveToLocalStorage();
-            }, 1000); // Save 1 second after last change
         }
 
         // Utility Functions
@@ -1749,7 +1753,6 @@
         }
 
         function updateReportContent() {
-            // Update header info
             document.getElementById('reportDate').textContent = 'Generated on ' + new Date().toLocaleDateString('en-US', { 
                 year: 'numeric', 
                 month: 'long', 
@@ -1760,7 +1763,6 @@
                              portfolioState.age < 55 ? "Mid-Career (35-54)" : "Pre-Retirement (55+)";
             document.getElementById('ageGroupDisplay').textContent = `Age: ${portfolioState.age} years (${ageGroup})`;
             
-            // Update client name
             const clientDisplay = document.getElementById('clientNameDisplay');
             if (portfolioState.clientName) {
                 clientDisplay.querySelector('h3').textContent = `Client: ${portfolioState.clientName}`;
@@ -1769,7 +1771,6 @@
                 clientDisplay.classList.add('hidden');
             }
 
-            // Update target allocation cards
             const targetContainer = document.getElementById('reportTargetCards');
             targetContainer.innerHTML = '';
             categories.forEach(category => {
@@ -1785,7 +1786,6 @@
                 targetContainer.appendChild(card);
             });
 
-            // Update analysis cards
             const analysisContainer = document.getElementById('reportAnalysisCards');
             const cashPercentage = getCashPercentage();
             const riskProfile = getRiskProfile();
@@ -1806,7 +1806,6 @@
                 </div>
             `;
 
-            // Update current allocation list
             const currentContainer = document.getElementById('reportCurrentAllocation');
             currentContainer.innerHTML = '';
             categories.forEach(category => {
@@ -1830,13 +1829,8 @@
                 currentContainer.appendChild(item);
             });
 
-            // Update portfolio metrics
             updatePortfolioMetrics();
-            
-            // Update holdings table
             updateHoldingsTable();
-            
-            // Update pyramid
             createPyramidVisualization('reportPyramid');
         }
 
@@ -1896,7 +1890,6 @@
                     tbody.appendChild(row);
                 });
                 
-                // Add category total row
                 const totalRow = document.createElement('tr');
                 totalRow.style.backgroundColor = '#f8f9fa';
                 totalRow.style.fontWeight = 'bold';
@@ -1916,7 +1909,6 @@
         }
 
         function updateOverviewContent() {
-            // Update target cards
             const overviewContainer = document.getElementById('overviewTargetCards');
             overviewContainer.innerHTML = '';
             categories.forEach(category => {
@@ -1932,10 +1924,7 @@
                 overviewContainer.appendChild(card);
             });
             
-            // Update pyramid
             createPyramidVisualization('overviewPyramid');
-            
-            // Update rebalancing alerts
             updateRebalancingAlerts();
         }
 
@@ -1985,7 +1974,6 @@
             const status = getCategoryStatus(categoryId);
             const total = calculateTotalValue();
 
-            // Update header
             document.getElementById('categoryHeader').innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
                     <div>
@@ -2010,7 +1998,6 @@
                 </div>
             `;
 
-            // Update description
             document.getElementById('categoryDescription').innerHTML = `
                 <p style="margin-bottom: 15px;">${category.description}</p>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
@@ -2022,7 +2009,6 @@
                 </div>
             `;
 
-            // Update stocks table
             const stocks = portfolioState.categoryStocks[categoryId];
             document.getElementById('categoryStocks').innerHTML = `
                 <h3>Your ${category.name} Holdings</h3>
@@ -2078,7 +2064,6 @@
                 </div>
             `;
 
-            // Update add stock section
             document.getElementById('addStockSection').innerHTML = `
                 <div class="alert alert-info">
                     <h4 style="margin-bottom: 15px;">Add New Stock/Asset</h4>
@@ -2096,7 +2081,6 @@
                 </div>
             `;
 
-            // Update rebalancing recommendations
             if (status !== 'balanced') {
                 const difference = portfolioState.actualAllocations[categoryId] - portfolioState.targetAllocations[categoryId];
                 const isOverweight = status === 'overweight';
@@ -2125,7 +2109,6 @@
                 `;
             }
 
-            // Update tips
             document.getElementById('categoryTips').innerHTML = `
                 <div class="alert alert-success" style="margin-top: 30px;">
                     <h4 style="margin-bottom: 15px;">💡 Tips for ${category.name}</h4>
@@ -2138,10 +2121,8 @@
 
         // Event Handlers
         function showTab(tabName) {
-            // Update current tab
             portfolioState.currentTab = tabName;
             
-            // Update tab buttons safely
             const currentTabButton = event?.target;
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
@@ -2149,7 +2130,6 @@
             if (currentTabButton) {
                 currentTabButton.classList.add('active');
             } else {
-                // Fallback: find and activate the correct tab
                 const tabs = document.querySelectorAll('.tab');
                 tabs.forEach(tab => {
                     if (tab.textContent.toLowerCase().includes(tabName.toLowerCase())) {
@@ -2158,12 +2138,10 @@
                 });
             }
             
-            // Hide all content
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
             });
             
-            // Show/hide age selector and portfolio summary
             const ageSelector = document.getElementById('ageSelector');
             const portfolioSummary = document.getElementById('portfolioSummary');
             
@@ -2292,7 +2270,6 @@
                 
                 portfolioState.categoryStocks[categoryId].push(newStock);
                 
-                // Clear inputs
                 nameInput.value = '';
                 dollarsInput.value = '5000';
                 
@@ -2307,7 +2284,6 @@
 
         // Initialize the application
         function init() {
-            // Try to load from localStorage first
             const hasLoadedData = loadFromLocalStorage();
             
             if (!hasLoadedData) {
@@ -2320,7 +2296,6 @@
             updateTabWarnings();
             updateReportContent();
             
-            // Set up localStorage saving
             localStorage.setItem('portfolioPyramidData', JSON.stringify({
                 portfolioState: portfolioState,
                 timestamp: new Date().toISOString(),
