@@ -922,7 +922,10 @@
         <button class="btn-file" onclick="exportPortfolio()">💾 Export Portfolio</button>
     </div>
     <div class="control-group">
-        <input type="file" id="fileInput" accept=".json" onchange="updateFileNameDisplay(event)" class="btn-file" style="padding: 10px 20px; cursor: pointer; width: 200px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+        <div class="file-input-wrapper">
+            <button class="btn-file" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">📁 Import Portfolio</button>
+            <input type="file" id="fileInput" accept=".json" onchange="importPortfolio(event)">
+        </div>
         <button class="btn-file" onclick="clearAllData()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🗑️ Clear All</button>
         <button class="btn-file" onclick="loadDefaultExample()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">📜 Default Example</button>
     </div>
@@ -1750,17 +1753,6 @@
     reader.readAsText(file);
 }
 
-        function updateFileNameDisplay(event) {
-    const fileInput = event.target;
-    const file = fileInput.files[0];
-    if (file) {
-        console.log('File selected:', file.name);
-        fileInput.title = file.name; // Tooltip for full name
-        importPortfolio(event); // Trigger import immediately after selection
-    } else {
-        fileInput.value = ''; // Reset if no file selected
-    }
-}
 
         function loadDefaultExample() {
     console.log('loadDefaultExample function called');
@@ -1770,26 +1762,82 @@
             clientName: 'Example Client',
             currentTab: 'report',
             targetAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
-            actualAllocations: { staples: 44.4, matureGrowth: 27.8, highGrowth: 22.2, highRisk: 5.6 },
+            actualAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
             categoryStocks: {
                 staples: [
-                    { name: 'Cash', dollars: 15000, id: 'staples-1' },
-                    { name: 'Gold ETF (GLD)', dollars: 5000, id: 'staples-2' }
+                    { name: 'Cash', dollars: 30000, id: 'staples-1' },
+                    { name: 'Gold ETF (GLD)', dollars: 20000, id: 'staples-2' },
+                    { name: 'Johnson & Johnson (JNJ)', dollars: 20000, id: 'staples-3' },
+                    { name: 'Procter & Gamble (PG)', dollars: 15000, id: 'staples-4' },
+                    { name: 'Walmart (WMT)', dollars: 15000, id: 'staples-5' }
                 ],
                 matureGrowth: [
-                    { name: 'Microsoft (MSFT)', dollars: 12500, id: 'mature-1' }
+                    { name: 'Microsoft (MSFT)', dollars: 15000, id: 'mature-1' },
+                    { name: 'Apple (AAPL)', dollars: 15000, id: 'mature-2' },
+                    { name: 'Visa (V)', dollars: 10000, id: 'mature-3' },
+                    { name: 'Home Depot (HD)', dollars: 10000, id: 'mature-4' },
+                    { name: 'Coca-Cola (KO)', dollars: 7500, id: 'mature-5' }
                 ],
                 highGrowth: [
-                    { name: 'Salesforce (CRM)', dollars: 10000, id: 'highgrowth-1' }
+                    { name: 'Salesforce (CRM)', dollars: 15000, id: 'highgrowth-1' },
+                    { name: 'Adobe (ADBE)', dollars: 12500, id: 'highgrowth-2' },
+                    { name: 'CrowdStrike (CRWD)', dollars: 12500, id: 'highgrowth-3' },
+                    { name: 'Palo Alto Networks (PANW)', dollars: 10000, id: 'highgrowth-4' },
+                    { name: 'NVIDIA (NVDA)', dollars: 10000, id: 'highgrowth-5' }
                 ],
                 highRisk: [
-                    { name: 'Cloudflare (NET)', dollars: 2500, id: 'highrisk-1' }
+                    { name: 'Cloudflare (NET)', dollars: 8000, id: 'highrisk-1' },
+                    { name: 'CRISPR Therapeutics (CRSP)', dollars: 6000, id: 'highrisk-2' },
+                    { name: 'Palantir (PLTR)', dollars: 5000, id: 'highrisk-3' },
+                    { name: 'SpaceX (Private)', dollars: 4000, id: 'highrisk-4' },
+                    { name: 'Coinbase (COIN)', dollars: 2000, id: 'highrisk-5' }
                 ]
             }
         },
         timestamp: new Date().toISOString(),
         version: '1.0'
     });
+    
+    try {
+        const importedData = JSON.parse(defaultJson);
+        console.log('Default example parsed data:', importedData);
+        
+        if (!importedData.portfolioState) {
+            throw new Error('Default example: Missing portfolioState');
+        }
+        
+        const requiredFields = ['age', 'clientName', 'currentTab', 'targetAllocations', 'actualAllocations', 'categoryStocks'];
+        const missingFields = requiredFields.filter(field => !importedData.portfolioState.hasOwnProperty(field));
+        if (missingFields.length > 0) {
+            throw new Error(`Default example: Missing fields: ${missingFields.join(', ')}`);
+        }
+        
+        console.log('Default example updating portfolioState:', importedData.portfolioState);
+        portfolioState = importedData.portfolioState;
+        
+        const ageSlider = document.getElementById('ageSlider');
+        const clientNameInput = document.getElementById('clientNameInput');
+        const ageDisplay = document.getElementById('ageDisplay');
+        
+        if (ageSlider) ageSlider.value = portfolioState.age;
+        if (clientNameInput) clientNameInput.value = portfolioState.clientName || '';
+        if (ageDisplay) ageDisplay.textContent = portfolioState.age + ' years';
+        
+        updateTargetAllocations();
+        updateActualAllocations();
+        updatePortfolioSummary();
+        updateTabWarnings();
+        
+        console.log('Default example refreshing UI for tab:', portfolioState.currentTab);
+        showTab(portfolioState.currentTab);
+        
+        saveToLocalStorage();
+        showNotification('Default example portfolio loaded successfully!', 'success');
+    } catch (error) {
+        console.error('Default example error:', error.message);
+        showNotification(`Error loading default example: ${error.message}`, 'error');
+    }
+}
     
     try {
         const importedData = JSON.parse(defaultJson);
