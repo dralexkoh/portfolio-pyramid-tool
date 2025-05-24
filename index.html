@@ -775,11 +775,11 @@
     </div>
     <div class="control-group">
         <input type="file" id="fileInput" accept=".json" onchange="updateFileNameDisplay(event)" class="btn-file" style="padding: 10px 20px; cursor: pointer; width: 200px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
-        <button class="btn-file" onclick="document.getElementById('fileInput').click()">📁 Import Portfolio</button>
         <button class="btn-file" onclick="clearAllData()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🗑️ Clear All</button>
         <button class="btn-file" onclick="loadDefaultExample()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">📜 Default Example</button>
     </div>
 </div>
+        
         <!-- Portfolio Summary -->
         <div id="portfolioSummary" class="summary-grid">
             <div class="summary-item">
@@ -1452,7 +1452,7 @@
     if (!file.name.toLowerCase().endsWith('.json')) {
         console.log('Invalid file type:', file.name);
         showNotification('Please select a valid .json file', 'error');
-        fileInput.value = ''; // Clear the file input
+        fileInput.value = '';
         return;
     }
     
@@ -1467,14 +1467,12 @@
                 throw new Error('Invalid file format: Missing portfolioState');
             }
             
-            // Validate portfolioState structure
             const requiredFields = ['age', 'clientName', 'currentTab', 'targetAllocations', 'actualAllocations', 'categoryStocks'];
             const missingFields = requiredFields.filter(field => !importedData.portfolioState.hasOwnProperty(field));
             if (missingFields.length > 0) {
                 throw new Error(`Invalid file format: Missing fields: ${missingFields.join(', ')}`);
             }
             
-            // Validate nested structures
             const allocationsFields = ['staples', 'matureGrowth', 'highGrowth', 'highRisk'];
             for (const field of allocationsFields) {
                 if (!importedData.portfolioState.targetAllocations[field] || !importedData.portfolioState.actualAllocations[field]) {
@@ -1488,7 +1486,6 @@
             console.log('Updating portfolioState:', importedData.portfolioState);
             portfolioState = importedData.portfolioState;
             
-            // Update UI elements safely
             const ageSlider = document.getElementById('ageSlider');
             const clientNameInput = document.getElementById('clientNameInput');
             const ageDisplay = document.getElementById('ageDisplay');
@@ -1518,7 +1515,7 @@
             console.log('Target allocations updated');
             
             updateActualAllocations();
-            console.log('Actual allocations updated');
+            console.log('Actual allocations updated:', portfolioState.actualAllocations);
             
             updatePortfolioSummary();
             console.log('Portfolio summary updated');
@@ -1526,9 +1523,33 @@
             updateTabWarnings();
             console.log('Tab warnings updated');
             
-            // Force UI refresh for the current tab
             console.log('Refreshing UI for tab:', portfolioState.currentTab);
-            showTab(portfolioState.currentTab);
+            try {
+                showTab(portfolioState.currentTab);
+                console.log('UI refreshed successfully via showTab');
+            } catch (error) {
+                console.error('Error in showTab:', error.message);
+                showTab('overview'); // Fallback to overview tab
+                throw new Error('Failed to refresh UI for tab ' + portfolioState.currentTab + ': ' + error.message);
+            }
+            
+            // Force update of the current tab's content
+            console.log('Forcing content update for current tab:', portfolioState.currentTab);
+            try {
+                if (portfolioState.currentTab === 'report') {
+                    updateReportContent();
+                } else if (portfolioState.currentTab === 'overview') {
+                    updateOverviewContent();
+                } else if (portfolioState.currentTab === 'help') {
+                    // Help tab doesn't need dynamic updates
+                } else {
+                    updateCategoryContent(portfolioState.currentTab);
+                }
+                console.log('Content update successful for tab:', portfolioState.currentTab);
+            } catch (error) {
+                console.error('Error forcing content update:', error.message);
+                throw new Error('Failed to update content for tab ' + portfolioState.currentTab + ': ' + error.message);
+            }
             
             saveToLocalStorage();
             console.log('Saved to localStorage');
@@ -1538,13 +1559,13 @@
             console.error('Import error:', error.message);
             showNotification(`Error importing portfolio: ${error.message}`, 'error');
         } finally {
-            fileInput.value = ''; // Clear the file input after processing
+            fileInput.value = '';
         }
     };
     reader.onerror = function(e) {
         console.error('FileReader error:', e);
         showNotification('Error reading file: Failed to read the file. Please try again.', 'error');
-        fileInput.value = ''; // Clear the file input on error
+        fileInput.value = '';
     };
     reader.readAsText(file);
 }
@@ -1900,25 +1921,39 @@
 }
 
         function updateReportContent() {
-            document.getElementById('reportDate').textContent = 'Generated on ' + new Date().toLocaleDateString('en-US', { 
+    console.log('updateReportContent called');
+    try {
+        const reportDate = document.getElementById('reportDate');
+        if (reportDate) {
+            reportDate.textContent = 'Generated on ' + new Date().toLocaleDateString('en-US', { 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric' 
             });
-            
+        }
+
+        const ageGroupDisplay = document.getElementById('ageGroupDisplay');
+        if (ageGroupDisplay) {
             const ageGroup = portfolioState.age < 35 ? "Young Investor (18-34)" : 
-                             portfolioState.age < 55 ? "Mid-Career (35-54)" : "Pre-Retirement (55+)";
-            document.getElementById('ageGroupDisplay').textContent = `Age: ${portfolioState.age} years (${ageGroup})`;
-            
-            const clientDisplay = document.getElementById('clientNameDisplay');
+                            portfolioState.age < 55 ? "Mid-Career (35-54)" : "Pre-Retirement (55+)";
+            ageGroupDisplay.textContent = `Age: ${portfolioState.age} years (${ageGroup})`;
+            console.log('Updated ageGroupDisplay to:', ageGroupDisplay.textContent);
+        }
+
+        const clientDisplay = document.getElementById('clientNameDisplay');
+        if (clientDisplay) {
             if (portfolioState.clientName) {
                 clientDisplay.querySelector('h3').textContent = `Client: ${portfolioState.clientName}`;
                 clientDisplay.classList.remove('hidden');
+                console.log('Updated clientNameDisplay to:', portfolioState.clientName);
             } else {
                 clientDisplay.classList.add('hidden');
+                console.log('Hid clientNameDisplay (no client name)');
             }
+        }
 
-            const targetContainer = document.getElementById('reportTargetCards');
+        const targetContainer = document.getElementById('reportTargetCards');
+        if (targetContainer) {
             targetContainer.innerHTML = '';
             categories.forEach(category => {
                 const card = document.createElement('div');
@@ -1932,15 +1967,18 @@
                 `;
                 targetContainer.appendChild(card);
             });
+            console.log('Updated reportTargetCards');
+        }
 
-            const analysisContainer = document.getElementById('reportAnalysisCards');
+        const analysisContainer = document.getElementById('reportAnalysisCards');
+        if (analysisContainer) {
             const cashPercentage = getCashPercentage();
             const riskProfile = getRiskProfile();
             const balanceScore = getBalanceScore();
             
             analysisContainer.innerHTML = `
                 <div class="metric-card cash">
-                    <div class="metric-value" style="color: #3498db;">${cashPercentage.toFixed(1)}%</div>
+                    <div class="metric-value" style="color: #3498db;">${isNaN(cashPercentage) ? '0.0' : cashPercentage.toFixed(1)}%</div>
                     <div class="metric-label">Cash Position</div>
                 </div>
                 <div class="metric-card risk">
@@ -1952,8 +1990,11 @@
                     <div class="metric-label">Balance Score</div>
                 </div>
             `;
+            console.log('Updated reportAnalysisCards');
+        }
 
-            const currentContainer = document.getElementById('reportCurrentAllocation');
+        const currentContainer = document.getElementById('reportCurrentAllocation');
+        if (currentContainer) {
             currentContainer.innerHTML = '';
             categories.forEach(category => {
                 const difference = portfolioState.actualAllocations[category.id] - portfolioState.targetAllocations[category.id];
@@ -1975,11 +2016,18 @@
                 `;
                 currentContainer.appendChild(item);
             });
-
-            updatePortfolioMetrics();
-            updateHoldingsTable();
-            createPyramidVisualization('reportPyramid');
+            console.log('Updated reportCurrentAllocation');
         }
+
+        updatePortfolioMetrics();
+        updateHoldingsTable();
+        createPyramidVisualization('reportPyramid');
+        console.log('updateReportContent completed successfully');
+    } catch (error) {
+        console.error('Error in updateReportContent:', error.message);
+        throw error;
+    }
+}
 
         function updatePortfolioMetrics() {
             const metricsContainer = document.getElementById('reportPortfolioMetrics');
@@ -2056,7 +2104,10 @@
         }
 
         function updateOverviewContent() {
-            const overviewContainer = document.getElementById('overviewTargetCards');
+    console.log('updateOverviewContent called');
+    try {
+        const overviewContainer = document.getElementById('overviewTargetCards');
+        if (overviewContainer) {
             overviewContainer.innerHTML = '';
             categories.forEach(category => {
                 const card = document.createElement('div');
@@ -2070,10 +2121,17 @@
                 `;
                 overviewContainer.appendChild(card);
             });
-            
-            createPyramidVisualization('overviewPyramid');
-            updateRebalancingAlerts();
+            console.log('Updated overviewTargetCards');
         }
+        
+        createPyramidVisualization('overviewPyramid');
+        updateRebalancingAlerts();
+        console.log('updateOverviewContent completed successfully');
+    } catch (error) {
+        console.error('Error in updateOverviewContent:', error.message);
+        throw error;
+    }
+}
 
         function updateRebalancingAlerts() {
             const alertsContainer = document.getElementById('rebalancingAlerts');
@@ -2116,12 +2174,22 @@
         }
 
         function updateCategoryContent(categoryId) {
-            const category = categories.find(c => c.id === categoryId);
-            const categoryTotal = calculateCategoryTotal(categoryId);
-            const status = getCategoryStatus(categoryId);
-            const total = calculateTotalValue();
+    console.log('updateCategoryContent called for category:', categoryId);
+    try {
+        const category = categories.find(c => c.id === categoryId);
+        if (!category) {
+            console.error('Category not found:', categoryId);
+            showTab('overview');
+            return;
+        }
+        
+        const categoryTotal = calculateCategoryTotal(categoryId);
+        const status = getCategoryStatus(categoryId);
+        const total = calculateTotalValue();
 
-            document.getElementById('categoryHeader').innerHTML = `
+        const header = document.getElementById('categoryHeader');
+        if (header) {
+            header.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
                     <div>
                         <h2>${category.icon} ${category.name} 
@@ -2144,8 +2212,12 @@
                     </div>
                 </div>
             `;
+            console.log('Updated categoryHeader');
+        }
 
-            document.getElementById('categoryDescription').innerHTML = `
+        const description = document.getElementById('categoryDescription');
+        if (description) {
+            description.innerHTML = `
                 <p style="margin-bottom: 15px;">${category.description}</p>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                     ${category.examples.map(example => `
@@ -2155,9 +2227,13 @@
                     `).join('')}
                 </div>
             `;
+            console.log('Updated categoryDescription');
+        }
 
-            const stocks = portfolioState.categoryStocks[categoryId];
-            document.getElementById('categoryStocks').innerHTML = `
+        const stocks = portfolioState.categoryStocks[categoryId];
+        const stocksSection = document.getElementById('categoryStocks');
+        if (stocksSection) {
+            stocksSection.innerHTML = `
                 <h3>Your ${category.name} Holdings</h3>
                 <div class="table-container">
                     <table style="margin-bottom: 30px;">
@@ -2202,7 +2278,7 @@
                             <tr style="background: #f8f9fa; font-weight: bold;">
                                 <td>Total</td>
                                 <td style="text-align: center;">${formatDollars(categoryTotal)}</td>
-                                <td style="text-align: center;">100%</td>
+                                <td style="text-align: center;">${categoryTotal > 0 ? '100' : '0'}%</td>
                                 <td style="text-align: center;">${portfolioState.actualAllocations[categoryId]}%</td>
                                 <td></td>
                             </tr>
@@ -2210,8 +2286,12 @@
                     </table>
                 </div>
             `;
+            console.log('Updated categoryStocks');
+        }
 
-            document.getElementById('addStockSection').innerHTML = `
+        const addStockSection = document.getElementById('addStockSection');
+        if (addStockSection) {
+            addStockSection.innerHTML = `
                 <div class="alert alert-info">
                     <h4 style="margin-bottom: 15px;">Add New Stock/Asset</h4>
                     <div class="stock-input">
@@ -2232,7 +2312,7 @@
                 const difference = portfolioState.actualAllocations[categoryId] - portfolioState.targetAllocations[categoryId];
                 const isOverweight = status === 'overweight';
                 
-                document.getElementById('addStockSection').innerHTML += `
+                addStockSection.innerHTML += `
                     <div class="alert ${isOverweight ? 'alert-warning' : 'alert-info'}" style="margin-top: 20px;">
                         <h4 style="margin-bottom: 15px; color: ${isOverweight ? '#856404' : '#0c5460'};">
                             Rebalancing Recommendations
@@ -2255,8 +2335,12 @@
                     </div>
                 `;
             }
+            console.log('Updated addStockSection');
+        }
 
-            document.getElementById('categoryTips').innerHTML = `
+        const tips = document.getElementById('categoryTips');
+        if (tips) {
+            tips.innerHTML = `
                 <div class="alert alert-success" style="margin-top: 30px;">
                     <h4 style="margin-bottom: 15px;">💡 Tips for ${category.name}</h4>
                     <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
@@ -2264,55 +2348,73 @@
                     </ul>
                 </div>
             `;
+            console.log('Updated categoryTips');
         }
+        
+        console.log('updateCategoryContent completed successfully for category:', categoryId);
+    } catch (error) {
+        console.error('Error in updateCategoryContent for category ' + categoryId + ':', error.message);
+        throw error;
+    }
+}
 
         // Event Handlers
         function showTab(tabName) {
-            portfolioState.currentTab = tabName;
-            
-            const currentTabButton = event?.target;
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            if (currentTabButton) {
-                currentTabButton.classList.add('active');
-            } else {
-                const tabs = document.querySelectorAll('.tab');
-                tabs.forEach(tab => {
-                    if (tab.textContent.toLowerCase().includes(tabName.toLowerCase())) {
-                        tab.classList.add('active');
-                    }
-                });
+    console.log('showTab called with tab:', tabName);
+    portfolioState.currentTab = tabName;
+    
+    const currentTabButton = event?.target;
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    if (currentTabButton) {
+        currentTabButton.classList.add('active');
+    } else {
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            if (tab.textContent.toLowerCase().includes(tabName.toLowerCase())) {
+                tab.classList.add('active');
             }
-            
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-            });
-            
-            const ageSelector = document.getElementById('ageSelector');
-            const portfolioSummary = document.getElementById('portfolioSummary');
-            
-            if (tabName === 'report') {
-                ageSelector.classList.add('hidden');
-                portfolioSummary.classList.add('hidden');
-                document.getElementById('reportContent').classList.remove('hidden');
-                updateReportContent();
-            } else if (tabName === 'overview') {
-                ageSelector.classList.remove('hidden');
-                portfolioSummary.classList.remove('hidden');
-                document.getElementById('overviewContent').classList.remove('hidden');
-                updateOverviewContent();
-            } else if (tabName === 'help') {
-                ageSelector.classList.add('hidden');
-                portfolioSummary.classList.add('hidden');
-                document.getElementById('helpContent').classList.remove('hidden');
-            } else {
-                ageSelector.classList.remove('hidden');
-                portfolioSummary.classList.remove('hidden');
-                document.getElementById('categoryContent').classList.remove('hidden');
-                updateCategoryContent(tabName);
-            }
+        });
+    }
+    
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    const ageSelector = document.getElementById('ageSelector');
+    const portfolioSummary = document.getElementById('portfolioSummary');
+    
+    try {
+        if (tabName === 'report') {
+            ageSelector.classList.add('hidden');
+            portfolioSummary.classList.add('hidden');
+            document.getElementById('reportContent').classList.remove('hidden');
+            updateReportContent();
+            console.log('Report tab shown successfully');
+        } else if (tabName === 'overview') {
+            ageSelector.classList.remove('hidden');
+            portfolioSummary.classList.remove('hidden');
+            document.getElementById('overviewContent').classList.remove('hidden');
+            updateOverviewContent();
+            console.log('Overview tab shown successfully');
+        } else if (tabName === 'help') {
+            ageSelector.classList.add('hidden');
+            portfolioSummary.classList.add('hidden');
+            document.getElementById('helpContent').classList.remove('hidden');
+            console.log('Help tab shown successfully');
+        } else {
+            ageSelector.classList.remove('hidden');
+            portfolioSummary.classList.remove('hidden');
+            document.getElementById('categoryContent').classList.remove('hidden');
+            updateCategoryContent(tabName);
+            console.log('Category tab shown successfully:', tabName);
         }
+    } catch (error) {
+        console.error('Error in showTab for tab ' + tabName + ':', error.message);
+        throw error; // Re-throw to be caught by caller
+    }
+}
 
         function updateAge(newAge) {
             portfolioState.age = parseInt(newAge);
