@@ -1340,35 +1340,47 @@
 
     <script>
         // Portfolio State Management
-        let portfolioState = {
-            age: 35,
-            clientName: '',
-            currentTab: 'report',
-            targetAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
-            actualAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
-            categoryStocks: {
-                staples: [
-                    { name: 'Cash', dollars: 15000, id: 'staples-1' },
-                    { name: 'Gold ETF (GLD)', dollars: 5000, id: 'staples-2' },
-                    { name: 'Johnson & Johnson (JNJ)', dollars: 10000, id: 'staples-3' },
-                    { name: 'Procter & Gamble (PG)', dollars: 10000, id: 'staples-4' }
-                ],
-                matureGrowth: [
-                    { name: 'Microsoft (MSFT)', dollars: 12500, id: 'mature-1' },
-                    { name: 'Apple (AAPL)', dollars: 7500, id: 'mature-2' },
-                    { name: 'Visa (V)', dollars: 5000, id: 'mature-3' }
-                ],
-                highGrowth: [
-                    { name: 'Salesforce (CRM)', dollars: 10000, id: 'highgrowth-1' },
-                    { name: 'Adobe (ADBE)', dollars: 8000, id: 'highgrowth-2' },
-                    { name: 'CrowdStrike (CRWD)', dollars: 7000, id: 'highgrowth-3' }
-                ],
-                highRisk: [
-                    { name: 'Cloudflare (NET)', dollars: 5000, id: 'highrisk-1' },
-                    { name: 'CRISPR (CRSP)', dollars: 5000, id: 'highrisk-2' }
-                ]
-            }
-        };
+       let portfolioState = {
+    age: 35,
+    clientName: '',
+    currentTab: 'report',
+    targetAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
+    actualAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
+    categoryStocks: {
+        staples: [
+            { name: 'Cash', dollars: 30000, id: 'staples-1' },           // 12% of portfolio
+            { name: 'Gold ETF (GLD)', dollars: 20000, id: 'staples-2' },  // 8% of portfolio
+            { name: 'Johnson & Johnson (JNJ)', dollars: 20000, id: 'staples-3' }, // 8% of portfolio
+            { name: 'Procter & Gamble (PG)', dollars: 15000, id: 'staples-4' },  // 6% of portfolio
+            { name: 'Walmart (WMT)', dollars: 15000, id: 'staples-5' }   // 6% of portfolio
+            // Total Staples: $100,000 (40%)
+        ],
+        matureGrowth: [
+            { name: 'Microsoft (MSFT)', dollars: 15000, id: 'mature-1' }, // 6% of portfolio
+            { name: 'Apple (AAPL)', dollars: 15000, id: 'mature-2' },     // 6% of portfolio
+            { name: 'Visa (V)', dollars: 10000, id: 'mature-3' },         // 4% of portfolio
+            { name: 'Home Depot (HD)', dollars: 10000, id: 'mature-4' },  // 4% of portfolio
+            { name: 'Coca-Cola (KO)', dollars: 7500, id: 'mature-5' }    // 3% of portfolio
+            // Total Mature Growth: $62,500 (25%)
+        ],
+        highGrowth: [
+            { name: 'Salesforce (CRM)', dollars: 15000, id: 'highgrowth-1' }, // 6% of portfolio
+            { name: 'Adobe (ADBE)', dollars: 12500, id: 'highgrowth-2' },     // 5% of portfolio
+            { name: 'CrowdStrike (CRWD)', dollars: 12500, id: 'highgrowth-3' }, // 5% of portfolio
+            { name: 'Palo Alto Networks (PANW)', dollars: 10000, id: 'highgrowth-4' }, // 4% of portfolio
+            { name: 'NVIDIA (NVDA)', dollars: 10000, id: 'highgrowth-5' }    // 4% of portfolio
+            // Total High Growth: $62,500 (25%)
+        ],
+        highRisk: [
+            { name: 'Cloudflare (NET)', dollars: 8000, id: 'highrisk-1' },   // 3.2% of portfolio
+            { name: 'CRISPR Therapeutics (CRSP)', dollars: 6000, id: 'highrisk-2' }, // 2.4% of portfolio
+            { name: 'Palantir (PLTR)', dollars: 5000, id: 'highrisk-3' },   // 2% of portfolio
+            { name: 'SpaceX (Private)', dollars: 4000, id: 'highrisk-4' },  // 1.6% of portfolio
+            { name: 'Coinbase (COIN)', dollars: 2000, id: 'highrisk-5' }    // 0.8% of portfolio
+            // Total High Risk: $25,000 (10%)
+        ]
+    }
+};
 
         const categories = [
             { 
