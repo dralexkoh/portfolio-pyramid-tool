@@ -927,7 +927,7 @@
             <input type="file" id="fileInput" accept=".json" onchange="importPortfolio(event)">
         </div>
         <button class="btn-file" onclick="clearAllData()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🗑️ Clear All</button>
-        <button class="btn-file" onclick="loadDefaultExample()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">📜 Default Example</button>
+        <button class="btn-file" onclick="loadDefaultExample()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">📜 Default Example</button> 
     </div>
 </div>
         
@@ -1837,48 +1837,7 @@
         console.error('Default example error:', error.message);
         showNotification(`Error loading default example: ${error.message}`, 'error');
     }
-}
-    
-    try {
-        const importedData = JSON.parse(defaultJson);
-        console.log('Default example parsed data:', importedData);
-        
-        if (!importedData.portfolioState) {
-            throw new Error('Default example: Missing portfolioState');
-        }
-        
-        const requiredFields = ['age', 'clientName', 'currentTab', 'targetAllocations', 'actualAllocations', 'categoryStocks'];
-        const missingFields = requiredFields.filter(field => !importedData.portfolioState.hasOwnProperty(field));
-        if (missingFields.length > 0) {
-            throw new Error(`Default example: Missing fields: ${missingFields.join(', ')}`);
-        }
-        
-        console.log('Default example updating portfolioState:', importedData.portfolioState);
-        portfolioState = importedData.portfolioState;
-        
-        const ageSlider = document.getElementById('ageSlider');
-        const clientNameInput = document.getElementById('clientNameInput');
-        const ageDisplay = document.getElementById('ageDisplay');
-        
-        if (ageSlider) ageSlider.value = portfolioState.age;
-        if (clientNameInput) clientNameInput.value = portfolioState.clientName || '';
-        if (ageDisplay) ageDisplay.textContent = portfolioState.age + ' years';
-        
-        updateTargetAllocations();
-        updateActualAllocations();
-        updatePortfolioSummary();
-        updateTabWarnings();
-        
-        console.log('Default example refreshing UI for tab:', portfolioState.currentTab);
-        showTab(portfolioState.currentTab);
-        
-        saveToLocalStorage();
-        showNotification('Default example portfolio loaded successfully!', 'success');
-    } catch (error) {
-        console.error('Default example error:', error.message);
-        showNotification(`Error loading default example: ${error.message}`, 'error');
-    }
-}
+} 
 
         function clearAllData() {
     if (confirm('Are you sure you want to clear all portfolio data? This action cannot be undone.')) {
