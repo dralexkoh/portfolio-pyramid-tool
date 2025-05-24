@@ -92,6 +92,69 @@
             }
         }
 
+        /* Save/Load Controls */
+        .save-controls {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%);
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 2px solid #27ae60;
+        }
+
+        .save-controls .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .save-status {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #27ae60;
+            border: 2px solid #27ae60;
+            font-weight: 500;
+        }
+
+        .save-status.saving {
+            color: #f39c12;
+            border-color: #f39c12;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .btn-file {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.2);
+        }
+
+        .btn-file:hover {
+            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
         .summary-grid {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             padding: 15px;
@@ -622,6 +685,15 @@
                 gap: 15px;
             }
             
+            .save-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .save-controls .control-group {
+                justify-content: center;
+            }
+            
             .tabs {
                 flex-wrap: wrap;
             }
@@ -659,6 +731,32 @@
                 font-size: 0.8em;
             }
         }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
     </style>
 </head>
 <body>
@@ -667,6 +765,21 @@
         <div class="header">
             <h1>Portfolio Pyramid Builder 📊</h1>
             <p>Professional portfolio allocation tool with systematic, age-based investment strategies</p>
+        </div>
+
+        <!-- Save/Load Controls -->
+        <div class="save-controls">
+            <div class="control-group">
+                <div class="save-status" id="saveStatus">✅ Auto-saved</div>
+                <button class="btn-file" onclick="exportPortfolio()">💾 Export Portfolio</button>
+            </div>
+            <div class="control-group">
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" accept=".json" onchange="importPortfolio(event)">
+                    <button class="btn-file">📁 Import Portfolio</button>
+                </div>
+                <button class="btn-file" onclick="clearAllData()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🗑️ Clear All</button>
+            </div>
         </div>
 
         <!-- Portfolio Summary -->
@@ -697,6 +810,7 @@
             <button class="tab" onclick="showTab('matureGrowth')">📈 Mature Growth</button>
             <button class="tab" onclick="showTab('highGrowth')">🚀 High Growth</button>
             <button class="tab" onclick="showTab('highRisk')">⚡ High Risk</button>
+            <button class="tab" onclick="showTab('help')">❓ Help</button>
         </div>
 
         <!-- Tab Content -->
@@ -770,6 +884,16 @@
                 <!-- Pyramid Visualization -->
                 <h3 style="text-align: center; margin: 30px 0 20px;">Portfolio Pyramid Visualization</h3>
                 <div id="reportPyramid" class="pyramid"></div>
+
+                <!-- Print Controls -->
+                <div class="text-center mt-20">
+                    <button class="btn-file" onclick="printReport()" style="background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); margin-right: 15px;">
+                        🖨️ Print Report
+                    </button>
+                    <button class="btn-file" onclick="downloadPDF()" style="background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);">
+                        📄 Download PDF
+                    </button>
+                </div>
             </div>
 
             <!-- Overview Tab -->
@@ -805,6 +929,250 @@
                 <div id="categoryStocks"></div>
                 <div id="addStockSection"></div>
                 <div id="categoryTips"></div>
+            </div>
+
+            <!-- Help Tab -->
+            <div id="helpContent" class="tab-content hidden">
+                <h2>📚 Portfolio Pyramid Builder - Help Guide</h2>
+                
+                <div class="alert alert-info">
+                    <h3>🎯 What is the Portfolio Pyramid?</h3>
+                    <p>The Portfolio Pyramid is a systematic approach to investment allocation based on risk levels and growth potential. It helps you build a balanced portfolio that matches your age, risk tolerance, and financial goals.</p>
+                </div>
+
+                <div class="allocation-grid">
+                    <div class="allocation-card" style="border-left-color: #2c3e50;">
+                        <h3>🏛️ Staples (Foundation)</h3>
+                        <p style="font-size: 0.9em; margin: 0; line-height: 1.4;">
+                            Cash, gold, dividend stocks, utilities, healthcare. These provide stability and protection during market downturns.
+                        </p>
+                    </div>
+                    <div class="allocation-card" style="border-left-color: #27ae60;">
+                        <h3>📈 Mature Growth</h3>
+                        <p style="font-size: 0.9em; margin: 0; line-height: 1.4;">
+                            Established companies with 5-12% growth. Think Microsoft, Apple, Visa - proven winners with steady growth.
+                        </p>
+                    </div>
+                    <div class="allocation-card" style="border-left-color: #f39c12;">
+                        <h3>🚀 High Growth</h3>
+                        <p style="font-size: 0.9em; margin: 0; line-height: 1.4;">
+                            Companies growing 12-24% annually. More volatile but higher potential returns. Salesforce, CrowdStrike, etc.
+                        </p>
+                    </div>
+                    <div class="allocation-card" style="border-left-color: #e74c3c;">
+                        <h3>⚡ High Risk</h3>
+                        <p style="font-size: 0.9em; margin: 0; line-height: 1.4;">
+                            Speculative investments with >25% growth potential. High risk but potential for 10x returns. Small allocation only.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="alert alert-success">
+                    <h3>🎂 Age-Based Allocation</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3498db;">
+                            <h4 style="color: #3498db; margin-bottom: 8px;">Young (18-34)</h4>
+                            <div style="font-size: 0.9em;">
+                                • Staples: 35%<br>
+                                • Mature Growth: 20%<br>
+                                • High Growth: 25%<br>
+                                • High Risk: 20%
+                            </div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #27ae60;">
+                            <h4 style="color: #27ae60; margin-bottom: 8px;">Mid-Career (35-54)</h4>
+                            <div style="font-size: 0.9em;">
+                                • Staples: 40%<br>
+                                • Mature Growth: 25%<br>
+                                • High Growth: 25%<br>
+                                • High Risk: 10%
+                            </div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #e67e22;">
+                            <h4 style="color: #e67e22; margin-bottom: 8px;">Pre-Retirement (55+)</h4>
+                            <div style="font-size: 0.9em;">
+                                • Staples: 40%<br>
+                                • Mature Growth: 30%<br>
+                                • High Growth: 25%<br>
+                                • High Risk: 5%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h3>🔒 Privacy & Data Security</h3>
+                    <p style="margin-bottom: 15px;"><strong>Your data stays 100% private and secure:</strong></p>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                        <li><strong>Auto-saved locally</strong> - Data saved in your browser only</li>
+                        <li><strong>No cloud storage</strong> - Nothing sent to external servers</li>
+                        <li><strong>Export control</strong> - You control when and how data is shared</li>
+                        <li><strong>No tracking</strong> - No analytics, cookies, or user monitoring</li>
+                    </ul>
+                </div>
+
+                <h3>💾 Save & Load Instructions</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 20px 0;">
+                    <div class="alert alert-info">
+                        <h4>📱 Auto-Save (Automatic)</h4>
+                        <p style="margin-bottom: 10px;">Your portfolio automatically saves to your browser every time you make changes.</p>
+                        <div style="font-size: 0.9em; color: #555;">
+                            ✅ Status shows "Auto-saved"<br>
+                            🔄 Works even offline<br>
+                            🛡️ Data stays on your device
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <h4>💾 Export Portfolio</h4>
+                        <p style="margin-bottom: 10px;">Download a backup file of your complete portfolio.</p>
+                        <div style="font-size: 0.9em; color: #555;">
+                            📁 Creates .json file<br>
+                            📧 Email to advisor/family<br>
+                            💼 Use for client meetings
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <h4>📁 Import Portfolio</h4>
+                        <p style="margin-bottom: 10px;">Upload a previously exported portfolio file.</p>
+                        <div style="font-size: 0.9em; color: #555;">
+                            🔄 Restores complete portfolio<br>
+                            👥 Share between family members<br>
+                            🏢 Load client portfolios
+                        </div>
+                    </div>
+                </div>
+
+                <h3>📊 How to Use Each Tab</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tab</th>
+                                <th>Purpose</th>
+                                <th>Key Features</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>📋 Report</strong></td>
+                                <td>Professional portfolio summary</td>
+                                <td>Complete analysis, holdings table, print/PDF export</td>
+                            </tr>
+                            <tr>
+                                <td><strong>📊 Overview</strong></td>
+                                <td>Portfolio balance and targets</td>
+                                <td>Pyramid visualization, rebalancing alerts, age settings</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🏛️ Staples</strong></td>
+                                <td>Manage defensive holdings</td>
+                                <td>Cash, gold, dividend stocks, utilities, healthcare</td>
+                            </tr>
+                            <tr>
+                                <td><strong>📈 Mature Growth</strong></td>
+                                <td>Established growth companies</td>
+                                <td>Blue-chip stocks with 5-12% growth rates</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🚀 High Growth</strong></td>
+                                <td>Fast-growing companies</td>
+                                <td>Technology and growth stocks with 12-24% growth</td>
+                            </tr>
+                            <tr>
+                                <td><strong>⚡ High Risk</strong></td>
+                                <td>Speculative investments</td>
+                                <td>Small positions in high-risk, high-reward opportunities</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>⚠️ Understanding the Warning System</h3>
+                <div class="alert alert-warning">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <h4 style="color: #e74c3c;">🔴 Overweight</h4>
+                            <p style="font-size: 0.9em; margin: 0;">Category has >5% more than target allocation. Consider reducing positions.</p>
+                        </div>
+                        <div>
+                            <h4 style="color: #f39c12;">🟡 Underweight</h4>
+                            <p style="font-size: 0.9em; margin: 0;">Category has >5% less than target allocation. Consider adding positions.</p>
+                        </div>
+                        <div>
+                            <h4 style="color: #27ae60;">🟢 Balanced</h4>
+                            <p style="font-size: 0.9em; margin: 0;">Category is within ±5% of target allocation. Well balanced!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>🎯 Pro Tips for Success</h3>
+                <div class="alert alert-success">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div>
+                            <h4>💰 Cash Management</h4>
+                            <ul style="margin: 10px 0 0 20px; font-size: 0.9em;">
+                                <li>Keep 10-15% in cash for opportunities</li>
+                                <li>Use high-yield savings or money market funds</li>
+                                <li>Consider 6-month to 2-year Treasury bills</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>📈 Rebalancing</h4>
+                            <ul style="margin: 10px 0 0 20px; font-size: 0.9em;">
+                                <li>Review quarterly, rebalance annually</li>
+                                <li>Use new money to rebalance first</li>
+                                <li>Tax-loss harvest when selling overweight positions</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>🛡️ Risk Management</h4>
+                            <ul style="margin: 10px 0 0 20px; font-size: 0.9em;">
+                                <li>Never put more than 5% in any single stock</li>
+                                <li>Adjust allocation as you age</li>
+                                <li>Emergency fund separate from investments</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <h3>🔧 Troubleshooting</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div>
+                            <h4>Data Not Saving?</h4>
+                            <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
+                                <li>Check browser allows localStorage</li>
+                                <li>Clear browser cache and reload</li>
+                                <li>Export as backup before troubleshooting</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>Import Not Working?</h4>
+                            <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
+                                <li>Ensure file is .json format</li>
+                                <li>File must be exported from this tool</li>
+                                <li>Try re-exporting and importing again</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>Print/PDF Issues?</h4>
+                            <ul style="margin: 5px 0 0 20px; font-size: 0.9em;">
+                                <li>Try "Print Report" for browser printing</li>
+                                <li>Use landscape orientation for best results</li>
+                                <li>Some browsers handle PDF better than others</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center" style="margin: 40px 0; padding: 30px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 12px;">
+                    <h3 style="color: #042139; margin-bottom: 15px;">Ready to Build Your Portfolio?</h3>
+                    <p style="color: #7f8c8d; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        Start with the Overview tab to set your age and see target allocations, then add your holdings in each category tab. The tool will automatically track your balance and provide rebalancing recommendations.
+                    </p>
+                    <button class="btn" onclick="showTab('overview')" style="margin-right: 15px;">🚀 Start Building</button>
+                    <button class="btn btn-success" onclick="showTab('report')">📋 View Report</button>
+                </div>
             </div>
         </div>
     </div>
@@ -905,6 +1273,280 @@
             }
         ];
 
+        // Print and PDF Functions
+        function printReport() {
+            // Create a print-friendly version
+            const printWindow = window.open('', '_blank');
+            const reportContent = document.getElementById('reportContent').innerHTML;
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Portfolio Report - ${portfolioState.clientName || 'Client'}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+                        .no-print { display: none !important; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .pyramid { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 20px 0; }
+                        .pyramid-section { padding: 15px; color: white; text-align: center; border-radius: 5px; min-width: 200px; }
+                        .allocation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+                        .allocation-card { border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+                        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+                        .metric-card { border: 1px solid #ddd; padding: 15px; text-align: center; border-radius: 5px; }
+                        .alert { padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #007bff; background: #f8f9fa; }
+                        h1, h2, h3 { color: #042139; }
+                        @media print { .no-print { display: none !important; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="no-print" style="margin-bottom: 20px; text-align: center;">
+                        <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">🖨️ Print</button>
+                        <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Close</button>
+                    </div>
+                    ${reportContent}
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            
+            // Auto-print after content loads
+            printWindow.onload = function() {
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+            };
+        }
+
+        function downloadPDF() {
+            // For now, use the print functionality as a PDF option
+            // Users can "Print to PDF" in their browser
+            showNotification('Use your browser\'s "Print to PDF" option from the print dialog', 'success');
+            printReport();
+        }
+
+        // Save/Load Functions
+        function saveToLocalStorage() {
+            try {
+                const dataToSave = {
+                    portfolioState: portfolioState,
+                    timestamp: new Date().toISOString(),
+                    version: '1.0'
+                };
+                
+                localStorage.setItem('portfolioPyramidData', JSON.stringify(dataToSave));
+                
+                const saveStatus = document.getElementById('saveStatus');
+                if (saveStatus) {
+                    saveStatus.textContent = '💾 Saving...';
+                    saveStatus.className = 'save-status saving';
+                    
+                    setTimeout(() => {
+                        saveStatus.textContent = '✅ Auto-saved';
+                        saveStatus.className = 'save-status';
+                    }, 500);
+                }
+                
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+                showNotification('Error saving data', 'error');
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const savedData = localStorage.getItem('portfolioPyramidData');
+                if (savedData) {
+                    const parsed = JSON.parse(savedData);
+                    if (parsed.portfolioState) {
+                        portfolioState = parsed.portfolioState;
+                        
+                        // Update UI elements safely
+                        const ageSlider = document.getElementById('ageSlider');
+                        const clientNameInput = document.getElementById('clientNameInput');
+                        
+                        if (ageSlider) ageSlider.value = portfolioState.age;
+                        if (clientNameInput) clientNameInput.value = portfolioState.clientName || '';
+                        
+                        updateTargetAllocations();
+                        updateActualAllocations();
+                        updatePortfolioSummary();
+                        updateTabWarnings();
+                        
+                        showNotification('Portfolio loaded from browser storage', 'success');
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading from localStorage:', error);
+                showNotification('Error loading saved data', 'error');
+            }
+            return false;
+        }
+
+        function exportPortfolio() {
+            try {
+                const dataToExport = {
+                    portfolioState: portfolioState,
+                    timestamp: new Date().toISOString(),
+                    version: '1.0',
+                    metadata: {
+                        totalValue: calculateTotalValue(),
+                        cashPercentage: getCashPercentage().toFixed(1),
+                        balanceScore: getBalanceScore()
+                    }
+                };
+                
+                const jsonString = JSON.stringify(dataToExport, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `portfolio-pyramid-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showNotification('Portfolio exported successfully!', 'success');
+            } catch (error) {
+                console.error('Error exporting portfolio:', error);
+                showNotification('Error exporting portfolio', 'error');
+            }
+        }
+
+        function importPortfolio(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (importedData.portfolioState) {
+                        portfolioState = importedData.portfolioState;
+                        
+                        // Update UI elements
+                        document.getElementById('ageSlider').value = portfolioState.age;
+                        document.getElementById('clientNameInput').value = portfolioState.clientName || '';
+                        document.getElementById('ageDisplay').textContent = portfolioState.age + ' years';
+                        
+                        updateTargetAllocations();
+                        updateActualAllocations();
+                        updatePortfolioSummary();
+                        updateTabWarnings();
+                        
+                        // Refresh current tab
+                        if (portfolioState.currentTab === 'report') {
+                            updateReportContent();
+                        } else if (portfolioState.currentTab === 'overview') {
+                            updateOverviewContent();
+                        } else if (categories.find(c => c.id === portfolioState.currentTab)) {
+                            updateCategoryContent(portfolioState.currentTab);
+                        }
+                        
+                        // Save to localStorage
+                        saveToLocalStorage();
+                        
+                        showNotification('Portfolio imported successfully!', 'success');
+                    } else {
+                        throw new Error('Invalid file format');
+                    }
+                } catch (error) {
+                    console.error('Error importing portfolio:', error);
+                    showNotification('Error importing portfolio. Please check file format.', 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Clear the file input
+            event.target.value = '';
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all portfolio data? This action cannot be undone.')) {
+                localStorage.removeItem('portfolioPyramidData');
+                
+                // Reset to default state
+                portfolioState = {
+                    age: 35,
+                    clientName: '',
+                    currentTab: 'report',
+                    targetAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
+                    actualAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
+                    categoryStocks: {
+                        staples: [
+                            { name: 'Cash', dollars: 15000, id: 'staples-1' },
+                            { name: 'Gold ETF (GLD)', dollars: 5000, id: 'staples-2' },
+                            { name: 'Johnson & Johnson (JNJ)', dollars: 10000, id: 'staples-3' },
+                            { name: 'Procter & Gamble (PG)', dollars: 10000, id: 'staples-4' }
+                        ],
+                        matureGrowth: [
+                            { name: 'Microsoft (MSFT)', dollars: 12500, id: 'mature-1' },
+                            { name: 'Apple (AAPL)', dollars: 7500, id: 'mature-2' },
+                            { name: 'Visa (V)', dollars: 5000, id: 'mature-3' }
+                        ],
+                        highGrowth: [
+                            { name: 'Salesforce (CRM)', dollars: 10000, id: 'highgrowth-1' },
+                            { name: 'Adobe (ADBE)', dollars: 8000, id: 'highgrowth-2' },
+                            { name: 'CrowdStrike (CRWD)', dollars: 7000, id: 'highgrowth-3' }
+                        ],
+                        highRisk: [
+                            { name: 'Cloudflare (NET)', dollars: 5000, id: 'highrisk-1' },
+                            { name: 'CRISPR (CRSP)', dollars: 5000, id: 'highrisk-2' }
+                        ]
+                    }
+                };
+                
+                // Reset UI
+                document.getElementById('ageSlider').value = 35;
+                document.getElementById('clientNameInput').value = '';
+                document.getElementById('ageDisplay').textContent = '35 years';
+                
+                updateTargetAllocations();
+                updateActualAllocations();
+                updatePortfolioSummary();
+                updateTabWarnings();
+                updateReportContent();
+                
+                showNotification('All data cleared successfully', 'success');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            // Remove any existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(n => n.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Hide notification after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Auto-save functionality
+        let saveTimeout;
+        function triggerAutoSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                saveToLocalStorage();
+            }, 1000); // Save 1 second after last change
+        }
+
         // Utility Functions
         function formatDollars(amount) {
             return new Intl.NumberFormat('en-US', {
@@ -934,6 +1576,7 @@
                     portfolioState.actualAllocations[category] = parseFloat(((categoryTotal / total) * 100).toFixed(1));
                 });
             }
+            triggerAutoSave();
         }
 
         function updateTargetAllocations() {
@@ -945,6 +1588,7 @@
             } else {
                 portfolioState.targetAllocations = { staples: 40, matureGrowth: 30, highGrowth: 25, highRisk: 5 };
             }
+            triggerAutoSave();
         }
 
         function getCashPercentage() {
@@ -1497,11 +2141,22 @@
             // Update current tab
             portfolioState.currentTab = tabName;
             
-            // Update tab buttons
+            // Update tab buttons safely
+            const currentTabButton = event?.target;
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (currentTabButton) {
+                currentTabButton.classList.add('active');
+            } else {
+                // Fallback: find and activate the correct tab
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach(tab => {
+                    if (tab.textContent.toLowerCase().includes(tabName.toLowerCase())) {
+                        tab.classList.add('active');
+                    }
+                });
+            }
             
             // Hide all content
             document.querySelectorAll('.tab-content').forEach(content => {
@@ -1522,6 +2177,10 @@
                 portfolioSummary.classList.remove('hidden');
                 document.getElementById('overviewContent').classList.remove('hidden');
                 updateOverviewContent();
+            } else if (tabName === 'help') {
+                ageSelector.classList.add('hidden');
+                portfolioSummary.classList.add('hidden');
+                document.getElementById('helpContent').classList.remove('hidden');
             } else {
                 ageSelector.classList.remove('hidden');
                 portfolioSummary.classList.remove('hidden');
@@ -1550,42 +2209,47 @@
             if (portfolioState.currentTab === 'report') {
                 updateReportContent();
             }
+            triggerAutoSave();
         }
 
         function resetToRecommended() {
-            portfolioState.categoryStocks = {
-                staples: [
-                    { name: 'Cash', dollars: 40000, id: 'staples-1' },
-                    { name: 'Gold ETF (GLD)', dollars: 20000, id: 'staples-2' },
-                    { name: 'Johnson & Johnson (JNJ)', dollars: 20000, id: 'staples-3' },
-                    { name: 'Procter & Gamble (PG)', dollars: 20000, id: 'staples-4' }
-                ],
-                matureGrowth: [
-                    { name: 'Microsoft (MSFT)', dollars: 12500, id: 'mature-1' },
-                    { name: 'Apple (AAPL)', dollars: 12500, id: 'mature-2' },
-                    { name: 'Visa (V)', dollars: 12500, id: 'mature-3' },
-                    { name: 'Home Depot (HD)', dollars: 12500, id: 'mature-4' }
-                ],
-                highGrowth: [
-                    { name: 'Salesforce (CRM)', dollars: 12500, id: 'highgrowth-1' },
-                    { name: 'Adobe (ADBE)', dollars: 12500, id: 'highgrowth-2' },
-                    { name: 'CrowdStrike (CRWD)', dollars: 12500, id: 'highgrowth-3' },
-                    { name: 'Palo Alto Networks (PANW)', dollars: 12500, id: 'highgrowth-4' }
-                ],
-                highRisk: [
-                    { name: 'Cloudflare (NET)', dollars: 10000, id: 'highrisk-1' },
-                    { name: 'CRISPR (CRSP)', dollars: 10000, id: 'highrisk-2' }
-                ]
-            };
-            
-            updateActualAllocations();
-            updatePortfolioSummary();
-            updateTabWarnings();
-            
-            if (portfolioState.currentTab === 'report') {
-                updateReportContent();
-            } else if (portfolioState.currentTab === 'overview') {
-                updateOverviewContent();
+            if (confirm('Reset portfolio to age-based recommendations? This will clear your current holdings.')) {
+                portfolioState.categoryStocks = {
+                    staples: [
+                        { name: 'Cash', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.staples / 100 * 0.4), id: 'staples-1' },
+                        { name: 'Gold ETF (GLD)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.staples / 100 * 0.2), id: 'staples-2' },
+                        { name: 'Johnson & Johnson (JNJ)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.staples / 100 * 0.2), id: 'staples-3' },
+                        { name: 'Procter & Gamble (PG)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.staples / 100 * 0.2), id: 'staples-4' }
+                    ],
+                    matureGrowth: [
+                        { name: 'Microsoft (MSFT)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.matureGrowth / 100 * 0.25), id: 'mature-1' },
+                        { name: 'Apple (AAPL)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.matureGrowth / 100 * 0.25), id: 'mature-2' },
+                        { name: 'Visa (V)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.matureGrowth / 100 * 0.25), id: 'mature-3' },
+                        { name: 'Home Depot (HD)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.matureGrowth / 100 * 0.25), id: 'mature-4' }
+                    ],
+                    highGrowth: [
+                        { name: 'Salesforce (CRM)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.highGrowth / 100 * 0.25), id: 'highgrowth-1' },
+                        { name: 'Adobe (ADBE)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.highGrowth / 100 * 0.25), id: 'highgrowth-2' },
+                        { name: 'CrowdStrike (CRWD)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.highGrowth / 100 * 0.25), id: 'highgrowth-3' },
+                        { name: 'Palo Alto Networks (PANW)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.highGrowth / 100 * 0.25), id: 'highgrowth-4' }
+                    ],
+                    highRisk: [
+                        { name: 'Cloudflare (NET)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.highRisk / 100 * 0.5), id: 'highrisk-1' },
+                        { name: 'CRISPR (CRSP)', dollars: Math.round(calculateTotalValue() * portfolioState.targetAllocations.highRisk / 100 * 0.5), id: 'highrisk-2' }
+                    ]
+                };
+                
+                updateActualAllocations();
+                updatePortfolioSummary();
+                updateTabWarnings();
+                
+                if (portfolioState.currentTab === 'report') {
+                    updateReportContent();
+                } else if (portfolioState.currentTab === 'overview') {
+                    updateOverviewContent();
+                }
+                
+                showNotification('Portfolio reset to age-based recommendations', 'success');
             }
         }
 
@@ -1636,16 +2300,32 @@
                 updatePortfolioSummary();
                 updateTabWarnings();
                 updateCategoryContent(categoryId);
+                
+                showNotification(`Added ${name} to ${categories.find(c => c.id === categoryId).name}`, 'success');
             }
         }
 
         // Initialize the application
         function init() {
-            updateTargetAllocations();
-            updateActualAllocations();
+            // Try to load from localStorage first
+            const hasLoadedData = loadFromLocalStorage();
+            
+            if (!hasLoadedData) {
+                updateTargetAllocations();
+                updateActualAllocations();
+                saveToLocalStorage();
+            }
+            
             updatePortfolioSummary();
             updateTabWarnings();
             updateReportContent();
+            
+            // Set up localStorage saving
+            localStorage.setItem('portfolioPyramidData', JSON.stringify({
+                portfolioState: portfolioState,
+                timestamp: new Date().toISOString(),
+                version: '1.0'
+            }));
         }
 
         // Start the application
