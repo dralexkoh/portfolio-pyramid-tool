@@ -1456,6 +1456,10 @@
         return;
     }
     
+    // Store the current tab before updating portfolioState
+    const currentTabBeforeImport = portfolioState.currentTab;
+    console.log('Current tab before import:', currentTabBeforeImport);
+    
     const reader = new FileReader();
     reader.onload = function(e) {
         console.log('File read, content length:', e.target.result.length);
@@ -1523,7 +1527,27 @@
             updateTabWarnings();
             console.log('Tab warnings updated');
             
-            console.log('Refreshing UI for tab:', portfolioState.currentTab);
+            // Force update of the CURRENT tab's content (before navigating to imported tab)
+            console.log('Forcing content update for current tab before import:', currentTabBeforeImport);
+            try {
+                if (currentTabBeforeImport === 'report') {
+                    updateReportContent();
+                } else if (currentTabBeforeImport === 'overview') {
+                    updateOverviewContent();
+                } else if (currentTabBeforeImport === 'help') {
+                    // Help tab doesn't need dynamic updates
+                    console.log('Help tab active, no content update needed');
+                } else {
+                    updateCategoryContent(currentTabBeforeImport);
+                }
+                console.log('Content update successful for tab:', currentTabBeforeImport);
+            } catch (error) {
+                console.error('Error forcing content update for tab ' + currentTabBeforeImport + ':', error.message);
+                throw new Error('Failed to update content for tab ' + currentTabBeforeImport + ': ' + error.message);
+            }
+            
+            // Navigate to the imported tab AFTER updating the current tab's content
+            console.log('Showing tab from imported data:', portfolioState.currentTab);
             try {
                 showTab(portfolioState.currentTab);
                 console.log('UI refreshed successfully via showTab');
@@ -1531,24 +1555,6 @@
                 console.error('Error in showTab:', error.message);
                 showTab('overview'); // Fallback to overview tab
                 throw new Error('Failed to refresh UI for tab ' + portfolioState.currentTab + ': ' + error.message);
-            }
-            
-            // Force update of the current tab's content
-            console.log('Forcing content update for current tab:', portfolioState.currentTab);
-            try {
-                if (portfolioState.currentTab === 'report') {
-                    updateReportContent();
-                } else if (portfolioState.currentTab === 'overview') {
-                    updateOverviewContent();
-                } else if (portfolioState.currentTab === 'help') {
-                    // Help tab doesn't need dynamic updates
-                } else {
-                    updateCategoryContent(portfolioState.currentTab);
-                }
-                console.log('Content update successful for tab:', portfolioState.currentTab);
-            } catch (error) {
-                console.error('Error forcing content update:', error.message);
-                throw new Error('Failed to update content for tab ' + portfolioState.currentTab + ': ' + error.message);
             }
             
             saveToLocalStorage();
