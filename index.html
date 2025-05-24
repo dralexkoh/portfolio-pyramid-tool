@@ -759,14 +759,16 @@
         .notification.error {
             background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         }
-        .footer {
+       .footer {
     background: linear-gradient(135deg, #042139 0%, #0a3855 100%);
     color: white;
     padding: 20px;
     text-align: center;
-    margin-top: 20px;
     border-top: 3px solid #b70000;
     box-shadow: 0 -2px 10px rgba(4, 33, 57, 0.2);
+    max-width: 1400px; /* Match container's max-width */
+    width: 95%; /* Match container's width */
+    margin: 20px auto 0 auto; /* Center the footer and add top margin for spacing */
 }
 
 .footer-content p {
@@ -786,21 +788,117 @@
     color: #e1e8ed;
 }
 
-@media (min-width: 768px) {
-    .footer {
-        padding: 30px;
+@media (max-width: 767px) {
+    .container {
+        margin: 10px;
+        width: calc(100% - 20px);
     }
     
-    .footer-content p {
+    .content {
+        padding: 20px;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr;
+        padding: 20px;
+        gap: 20px;
+    }
+    
+    .save-controls {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+    }
+    
+    .save-controls .control-group {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .save-controls .btn-file {
+        padding: 12px 24px;
+        font-size: 1em;
+        min-width: 180px;
+    }
+    
+    .tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .tab {
+        padding: 14px 18px;
+        font-size: 0.95em;
+        min-width: 100px;
+    }
+    
+    .allocation-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 20px;
+    }
+    
+    .pyramid {
+        margin: 25px 0;
+        padding: 20px;
+    }
+    
+    .pyramid-section {
+        padding: 20px;
+        min-height: 80px;
+    }
+    
+    .pyramid-section .section-name {
+        font-size: 1.1em;
+    }
+    
+    .pyramid-section .section-details {
+        font-size: 0.85em;
+    }
+    
+    .btn, .btn-file, .btn-success, .btn-danger {
+        padding: 12px 24px;
+        font-size: 1em;
+        min-width: 180px;
+    }
+    
+    .form-group input, .form-group select {
+        padding: 14px 16px;
         font-size: 1em;
     }
     
-    .footer-content .revision {
+    .stock-input {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .stock-input .btn {
+        width: 100%;
+    }
+    
+    .footer {
+        margin: 10px;
+        width: calc(100% - 20px);
+        padding: 25px;
+    }
+    
+    .footer-content p {
+        font-size: 0.95em;
+    }
+    
+    .footer-content .disclaimer {
         font-size: 0.9em;
     }
-}
-        .header {
-    animation: fadeIn 1s ease-in-out;
+    
+    .footer-content .revision {
+        font-size: 0.85em;
+    }
 }
 
 @keyframes fadeIn {
@@ -816,7 +914,16 @@
             <h1>Portfolio Pyramid Builder 📊</h1>
             <p>Professional portfolio allocation tool with systematic, age-based investment strategies</p>
         </div>
-
+        
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-content">
+        <p>Copyright © 2025 Alex Koh. All rights reserved.</p>
+        <p class="disclaimer">Not financial advice—use at your own risk. Always consult with a qualified financial advisor before making investment decisions.</p>
+        <p class="revision">Revision V1.2 | 2025</p>
+    </div>
+</footer>
+        
         <!-- Save/Load Controls -->
         <div class="save-controls">
     <div class="control-group">
@@ -934,16 +1041,21 @@
                 <h3 style="text-align: center; margin: 30px 0 20px;">Portfolio Pyramid Visualization</h3>
                 <div id="reportPyramid" class="pyramid"></div>
 
-                <!-- Print Controls -->
-                <div class="text-center mt-20">
-                    <button class="btn-file" onclick="printReport()" style="background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); margin-right: 15px;">
-                        🖨️ Print Report
-                    </button>
-                    <button class="btn-file" onclick="downloadPDF()" style="background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);">
-                        📄 Download PDF
-                    </button>
-                </div>
-            </div>
+               <!-- CTA for Professional Help -->
+<div class="text-center mt-20">
+    <p style="color: #042139; margin-bottom: 15px;">Want personalized advice for your portfolio?</p>
+    <a href="https://dralexkoh.gumroad.com/l/portfolio" target="_blank" class="btn btn-success">📞 Contact Alex Koh for a Professional Review</a>
+</div>
+
+<!-- Print Controls -->
+<div class="text-center mt-20">
+    <button class="btn-file" onclick="printReport()" style="background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); margin-right: 15px;">
+        🖨️ Print Report
+    </button>
+    <button class="btn-file" onclick="downloadPDF()" style="background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);">
+        📄 Download PDF
+    </button>
+</div>
 
             <!-- Overview Tab -->
             <div id="overviewContent" class="tab-content hidden">
@@ -1226,14 +1338,7 @@
             </div>
         </div>
     </div>
-<!-- Footer -->
-<footer class="footer">
-    <div class="footer-content">
-        <p>Copyright © 2025 Alex Koh. All rights reserved.</p>
-        <p class="disclaimer">Not financial advice—use at your own risk. Always consult with a qualified financial advisor before making investment decisions.</p>
-        <p class="revision">Revision V1.2 | 2025</p>
-    </div>
-</footer>
+
     <script>
         // Portfolio State Management
         let portfolioState = {
