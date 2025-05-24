@@ -2704,19 +2704,7 @@
     const hasLoadedData = loadFromLocalStorage();
     
     if (!hasLoadedData) {
-        portfolioState = {
-            age: 35,
-            clientName: '',
-            currentTab: 'report',
-            targetAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
-            actualAllocations: { staples: 0, matureGrowth: 0, highGrowth: 0, highRisk: 0 },
-            categoryStocks: {
-                staples: [],
-                matureGrowth: [],
-                highGrowth: [],
-                highRisk: []
-            }
-        };
+        // Keep the initial portfolioState with sample data instead of resetting to empty
         updateTargetAllocations();
         updateActualAllocations();
         saveToLocalStorage();
@@ -2724,7 +2712,7 @@
     
     updatePortfolioSummary();
     updateTabWarnings();
-    updateReportContent();
+    showTab('report'); // Explicitly call showTab to ensure the initial tab is set correctly
 }
 
         // Start the application
