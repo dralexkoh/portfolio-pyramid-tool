@@ -1403,137 +1403,121 @@
         }
 
         function exportPortfolio() {
-            try {
-                const dataToExport = {
-                    portfolioState: portfolioState,
-                    timestamp: new Date().toISOString(),
-                    version: '1.0',
-                    metadata: {
-                        totalValue: calculateTotalValue(),
-                        cashPercentage: getCashPercentage().toFixed(1),
-                        balanceScore: getBalanceScore()
-                    }
-                };
-                
-                const jsonString = JSON.stringify(dataToExport, null, 2);
-                const blob = new Blob([jsonString], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                
-                const clientName = portfolioState.clientName || 'Portfolio';
-                const dateString = new Date().toISOString().split('T')[0];
-                const filename = `${clientName.replace(/[^a-zA-Z0-9]/g, '_')}-Pyramid-${dateString}.json`;
-                
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                showNotification(`Portfolio exported as: ${filename}`, 'success');
-            } catch (error) {
-                console.error('Error exporting portfolio:', error);
-                showNotification('Error exporting portfolio', 'error');
+    try {
+        const dataToExport = {
+            portfolioState: portfolioState,
+            timestamp: new Date().toISOString(),
+            version: '1.0',
+            metadata: {
+                totalValue: calculateTotalValue(),
+                cashPercentage: getCashPercentage().toFixed(1),
+                balanceScore: getBalanceScore(),
+                age: portfolioState.age
             }
-        }
+        };
+        
+        const jsonString = JSON.stringify(dataToExport, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const clientName = portfolioState.clientName || 'Anonymous';
+        const dateString = new Date().toISOString().replace(/[:.]/g, '-').split('.')[0];
+        const filename = `${clientName.replace(/[^a-zA-Z0-9]/g, '_')}-Age${portfolioState.age}-Pyramid-${dateString}.json`;
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showNotification(`Portfolio exported as: ${filename}`, 'success');
+    } catch (error) {
+        console.error('Error exporting portfolio:', error);
+        showNotification('Error exporting portfolio', 'error');
+    }
+}
 
         function importPortfolio(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    console.log('Import triggered, file:', file.name);
+    
+    if (!file.name.toLowerCase().endsWith('.json')) {
+        showNotification('Please select a valid .json file', 'error');
+        event.target.value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        console.log('File read, content length:', e.target.result.length);
+        try {
+            const importedData = JSON.parse(e.target.result);
+            console.log('Parsed data:', importedData);
             
-            if (!file.name.toLowerCase().endsWith('.json')) {
-                showNotification('Please select a valid .json file', 'error');
-                event.target.value = '';
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    
-                    if (importedData.portfolioState) {
-                        portfolioState = importedData.portfolioState;
-                        
-                        document.getElementById('ageSlider').value = portfolioState.age;
-                        document.getElementById('clientNameInput').value = portfolioState.clientName || '';
-                        document.getElementById('ageDisplay').textContent = portfolioState.age + ' years';
-                        
-                        updateTargetAllocations();
-                        updateActualAllocations();
-                        updatePortfolioSummary();
-                        updateTabWarnings();
-                        
-                        if (portfolioState.currentTab === 'report') {
-                            updateReportContent();
-                        } else if (portfolioState.currentTab === 'overview') {
-                            updateOverviewContent();
-                        } else if (categories.find(c => c.id === portfolioState.currentTab)) {
-                            updateCategoryContent(portfolioState.currentTab);
-                        }
-                        
-                        saveToLocalStorage();
-                        showNotification('Portfolio imported successfully!', 'success');
-                    } else {
-                        throw new Error('Invalid file format');
-                    }
-                } catch (error) {
-                    console.error('Error importing portfolio:', error);
-                    showNotification('Error importing portfolio. Please check file format.', 'error');
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
-
-        function clearAllData() {
-            if (confirm('Are you sure you want to clear all portfolio data? This action cannot be undone.')) {
-                localStorage.removeItem('portfolioPyramidData');
+            if (importedData.portfolioState) {
+                console.log('Updating portfolioState:', importedData.portfolioState);
+                portfolioState = importedData.portfolioState;
                 
-                portfolioState = {
-                    age: 35,
-                    clientName: '',
-                    currentTab: 'report',
-                    targetAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
-                    actualAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
-                    categoryStocks: {
-                        staples: [
-                            { name: 'Cash', dollars: 15000, id: 'staples-1' },
-                            { name: 'Gold ETF (GLD)', dollars: 5000, id: 'staples-2' },
-                            { name: 'Johnson & Johnson (JNJ)', dollars: 10000, id: 'staples-3' },
-                            { name: 'Procter & Gamble (PG)', dollars: 10000, id: 'staples-4' }
-                        ],
-                        matureGrowth: [
-                            { name: 'Microsoft (MSFT)', dollars: 12500, id: 'mature-1' },
-                            { name: 'Apple (AAPL)', dollars: 7500, id: 'mature-2' },
-                            { name: 'Visa (V)', dollars: 5000, id: 'mature-3' }
-                        ],
-                        highGrowth: [
-                            { name: 'Salesforce (CRM)', dollars: 10000, id: 'highgrowth-1' },
-                            { name: 'Adobe (ADBE)', dollars: 8000, id: 'highgrowth-2' },
-                            { name: 'CrowdStrike (CRWD)', dollars: 7000, id: 'highgrowth-3' }
-                        ],
-                        highRisk: [
-                            { name: 'Cloudflare (NET)', dollars: 5000, id: 'highrisk-1' },
-                            { name: 'CRISPR (CRSP)', dollars: 5000, id: 'highrisk-2' }
-                        ]
-                    }
-                };
-                
-                document.getElementById('ageSlider').value = 35;
-                document.getElementById('clientNameInput').value = '';
-                document.getElementById('ageDisplay').textContent = '35 years';
+                document.getElementById('ageSlider').value = portfolioState.age;
+                document.getElementById('clientNameInput').value = portfolioState.clientName || '';
+                document.getElementById('ageDisplay').textContent = portfolioState.age + ' years';
                 
                 updateTargetAllocations();
                 updateActualAllocations();
                 updatePortfolioSummary();
                 updateTabWarnings();
-                updateReportContent();
                 
-                showNotification('All data cleared successfully', 'success');
+                showTab(portfolioState.currentTab); // Force UI refresh
+                
+                saveToLocalStorage();
+                showNotification('Portfolio imported successfully!', 'success');
+            } else {
+                throw new Error('Invalid file format');
             }
+        } catch (error) {
+            console.error('Import error:', error);
+            showNotification('Error importing portfolio. Please check file format.', 'error');
         }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+        function clearAllData() {
+    if (confirm('Are you sure you want to clear all portfolio data? This action cannot be undone.')) {
+        localStorage.removeItem('portfolioPyramidData');
+        
+        portfolioState = {
+            age: 35,
+            clientName: '',
+            currentTab: 'report',
+            targetAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
+            actualAllocations: { staples: 0, matureGrowth: 0, highGrowth: 0, highRisk: 0 },
+            categoryStocks: {
+                staples: [],
+                matureGrowth: [],
+                highGrowth: [],
+                highRisk: []
+            }
+        };
+        
+        document.getElementById('ageSlider').value = 35;
+        document.getElementById('clientNameInput').value = '';
+        document.getElementById('ageDisplay').textContent = '35 years';
+        
+        updateTargetAllocations();
+        updateActualAllocations();
+        updatePortfolioSummary();
+        updateTabWarnings();
+        updateReportContent();
+        
+        showNotification('All data cleared successfully', 'success');
+    }
+}
 
         function showNotification(message, type = 'success') {
             const existingNotifications = document.querySelectorAll('.notification');
@@ -1573,15 +1557,19 @@
         }
 
         function updateActualAllocations() {
-            const total = calculateTotalValue();
-            if (total > 0) {
-                Object.keys(portfolioState.categoryStocks).forEach(category => {
-                    const categoryTotal = calculateCategoryTotal(category);
-                    portfolioState.actualAllocations[category] = parseFloat(((categoryTotal / total) * 100).toFixed(1));
-                });
-            }
-            triggerAutoSave();
-        }
+    const total = calculateTotalValue();
+    if (total === 0) {
+        Object.keys(portfolioState.actualAllocations).forEach(category => {
+            portfolioState.actualAllocations[category] = 0;
+        });
+    } else {
+        Object.keys(portfolioState.categoryStocks).forEach(category => {
+            const categoryTotal = calculateCategoryTotal(category);
+            portfolioState.actualAllocations[category] = parseFloat(((categoryTotal / total) * 100).toFixed(1));
+        });
+    }
+    triggerAutoSave();
+}
 
         function updateTargetAllocations() {
             const age = portfolioState.age;
@@ -1660,16 +1648,16 @@
 
         // UI Update Functions
         function updatePortfolioSummary() {
-            const total = calculateTotalValue();
-            const cashPercentage = getCashPercentage();
-            const largest = getLargestHolding();
-            const balanceScore = getBalanceScore();
+    const total = calculateTotalValue();
+    const cashPercentage = getCashPercentage();
+    const largest = getLargestHolding();
+    const balanceScore = getBalanceScore();
 
-            document.getElementById('totalValue').textContent = formatDollars(total);
-            document.getElementById('cashPosition').textContent = cashPercentage.toFixed(1) + '%';
-            document.getElementById('largestHolding').textContent = `${largest.name} (${largest.percentage.toFixed(1)}%)`;
-            document.getElementById('balanceStatus').textContent = balanceScore;
-        }
+    document.getElementById('totalValue').textContent = total === 0 ? '$0' : formatDollars(total);
+    document.getElementById('cashPosition').textContent = total === 0 ? '0.0%' : cashPercentage.toFixed(1) + '%';
+    document.getElementById('largestHolding').textContent = total === 0 ? 'None' : `${largest.name} (${largest.percentage.toFixed(1)}%)`;
+    document.getElementById('balanceStatus').textContent = total === 0 ? 'Empty' : balanceScore;
+}
 
         function updateTabWarnings() {
             const outOfBalance = getOutOfBalanceCategories();
@@ -1688,69 +1676,79 @@
         }
 
         function createPyramidVisualization(containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
 
-            const pyramidData = [
-                { 
-                    id: 'highRisk', 
-                    name: 'High Risk', 
-                    target: portfolioState.targetAllocations.highRisk, 
-                    actual: portfolioState.actualAllocations.highRisk, 
-                    color: '#e74c3c', 
-                    width: Math.max(20, Math.min(80, portfolioState.actualAllocations.highRisk * 2))
-                },
-                { 
-                    id: 'highGrowth', 
-                    name: 'High Growth', 
-                    target: portfolioState.targetAllocations.highGrowth, 
-                    actual: portfolioState.actualAllocations.highGrowth, 
-                    color: '#f39c12', 
-                    width: Math.max(30, Math.min(90, portfolioState.actualAllocations.highGrowth * 2))
-                },
-                { 
-                    id: 'matureGrowth', 
-                    name: 'Mature Growth', 
-                    target: portfolioState.targetAllocations.matureGrowth, 
-                    actual: portfolioState.actualAllocations.matureGrowth, 
-                    color: '#27ae60', 
-                    width: Math.max(40, Math.min(95, portfolioState.actualAllocations.matureGrowth * 2.5))
-                },
-                { 
-                    id: 'staples', 
-                    name: 'Staples', 
-                    target: portfolioState.targetAllocations.staples, 
-                    actual: portfolioState.actualAllocations.staples, 
-                    color: '#2c3e50', 
-                    width: Math.max(50, Math.min(100, portfolioState.actualAllocations.staples * 1.5))
-                }
-            ];
+    const total = calculateTotalValue();
+    if (total === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <p style="margin: 0;">No holdings added yet. Add stocks in the category tabs to see your portfolio pyramid.</p>
+            </div>
+        `;
+        return;
+    }
 
-            pyramidData.forEach(section => {
-                const status = getCategoryStatus(section.id);
-                
-                const sectionDiv = document.createElement('div');
-                sectionDiv.className = `pyramid-section ${status}`;
-                sectionDiv.style.backgroundColor = section.color;
-                sectionDiv.style.width = section.width + '%';
-                
-                let statusBadge = '';
-                if (status !== 'balanced') {
-                    statusBadge = `<div class="status-badge">${status === 'overweight' ? 'OVER' : 'UNDER'}</div>`;
-                }
-                
-                sectionDiv.innerHTML = `
-                    <div class="section-name">${section.name}</div>
-                    <div class="section-details">
-                        Target: ${section.target}% | Actual: ${section.actual}%
-                    </div>
-                    ${section.id === 'staples' ? `<div style="font-size: 0.8em; margin-top: 5px;">Cash: ${getCashPercentage().toFixed(1)}% of portfolio</div>` : ''}
-                    ${statusBadge}
-                `;
-                
-                container.appendChild(sectionDiv);
-            });
+    const pyramidData = [
+        { 
+            id: 'highRisk', 
+            name: 'High Risk', 
+            target: portfolioState.targetAllocations.highRisk, 
+            actual: portfolioState.actualAllocations.highRisk, 
+            color: '#e74c3c', 
+            width: Math.max(20, Math.min(80, portfolioState.actualAllocations.highRisk * 2))
+        },
+        { 
+            id: 'highGrowth', 
+            name: 'High Growth', 
+            target: portfolioState.targetAllocations.highGrowth, 
+            actual: portfolioState.actualAllocations.highGrowth, 
+            color: '#f39c12', 
+            width: Math.max(30, Math.min(90, portfolioState.actualAllocations.highGrowth * 2))
+        },
+        { 
+            id: 'matureGrowth', 
+            name: 'Mature Growth', 
+            target: portfolioState.targetAllocations.matureGrowth, 
+            actual: portfolioState.actualAllocations.matureGrowth, 
+            color: '#27ae60', 
+            width: Math.max(40, Math.min(95, portfolioState.actualAllocations.matureGrowth * 2.5))
+        },
+        { 
+            id: 'staples', 
+            name: 'Staples', 
+            target: portfolioState.targetAllocations.staples, 
+            actual: portfolioState.actualAllocations.staples, 
+            color: '#2c3e50', 
+            width: Math.max(50, Math.min(100, portfolioState.actualAllocations.staples * 1.5))
         }
+    ];
+
+    pyramidData.forEach(section => {
+        const status = getCategoryStatus(section.id);
+        
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = `pyramid-section ${status}`;
+        sectionDiv.style.backgroundColor = section.color;
+        sectionDiv.style.width = section.width + '%';
+        
+        let statusBadge = '';
+        if (status !== 'balanced') {
+            statusBadge = `<div class="status-badge">${status === 'overweight' ? 'OVER' : 'UNDER'}</div>`;
+        }
+        
+        sectionDiv.innerHTML = `
+            <div class="section-name">${section.name}</div>
+            <div class="section-details">
+                Target: ${section.target}% | Actual: ${section.actual}%
+            </div>
+            ${section.id === 'staples' ? `<div style="font-size: 0.8em; margin-top: 5px;">Cash: ${getCashPercentage().toFixed(1)}% of portfolio</div>` : ''}
+            ${statusBadge}
+        `;
+        
+        container.appendChild(sectionDiv);
+    });
+}
 
         function updateReportContent() {
             document.getElementById('reportDate').textContent = 'Generated on ' + new Date().toLocaleDateString('en-US', { 
