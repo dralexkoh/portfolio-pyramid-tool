@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portfolio Pyramid Builder 📊</title>
+    
     <style>
         * {
             margin: 0;
@@ -12,13 +13,13 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-            background: #f8f9fa;
-            padding: 10px;
-            line-height: 1.5;
-            color: #042139;
-            font-size: 16px;
-        }
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+    padding: 10px;
+    line-height: 1.5;
+    color: #042139;
+    font-size: 16px;
+}
 
         @media (min-width: 768px) {
             body {
@@ -150,10 +151,10 @@
         }
 
         .btn-file:hover {
-            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
-        }
+    background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
 
         .summary-grid {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -179,19 +180,19 @@
         }
 
         .summary-item {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(4, 33, 57, 0.1);
-            border-left: 4px solid #b70000;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(4, 33, 57, 0.15);
+    border-left: 4px solid #b70000;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-        .summary-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(4, 33, 57, 0.15);
-        }
+.summary-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(4, 33, 57, 0.2);
+}
 
         .summary-item .value {
             font-size: 1.6em;
@@ -232,19 +233,20 @@
         }
 
         .tab.active {
-            background: #b70000;
-            color: white;
-        }
+    background: #b70000;
+    color: white;
+    box-shadow: 0 0 10px rgba(183, 0, 0, 0.5);
+}
 
         .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -3px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: #febf1a;
-        }
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #febf1a;
+}
 
         .tab.warning {
             position: relative;
@@ -360,10 +362,10 @@
         }
 
         .btn:hover {
-            background: linear-gradient(135deg, #a10000 0%, #b70000 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(183, 0, 0, 0.3);
-        }
+    background: linear-gradient(135deg, #a10000 0%, #b70000 100%);
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(183, 0, 0, 0.3);
+}
 
         .btn-success {
             background: linear-gradient(135deg, #042139 0%, #0a3855 100%);
@@ -475,18 +477,18 @@
         }
 
         .allocation-card {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            border-left: 5px solid #b70000;
-            box-shadow: 0 3px 12px rgba(4, 33, 57, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    border-left: 5px solid #b70000;
+    box-shadow: 0 4px 12px rgba(4, 33, 57, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-        .allocation-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(4, 33, 57, 0.15);
-        }
+.allocation-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(4, 33, 57, 0.2);
+}
 
         .allocation-card h3 {
             color: #042139;
@@ -615,19 +617,19 @@
         }
 
         .metric-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            border: 2px solid #e1e8ed;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(4, 33, 57, 0.05);
-        }
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    border: 2px solid #e1e8ed;
+    box-shadow: 0 4px 12px rgba(4, 33, 57, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-        .metric-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(4, 33, 57, 0.1);
-        }
+.metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(4, 33, 57, 0.2);
+}
 
         .metric-card .metric-value {
             font-size: 1.6em;
@@ -757,6 +759,54 @@
         .notification.error {
             background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         }
+        .footer {
+    background: linear-gradient(135deg, #042139 0%, #0a3855 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    margin-top: 20px;
+    border-top: 3px solid #b70000;
+    box-shadow: 0 -2px 10px rgba(4, 33, 57, 0.2);
+}
+
+.footer-content p {
+    margin: 5px 0;
+    font-size: 0.9em;
+    opacity: 0.95;
+}
+
+.footer-content .disclaimer {
+    font-style: italic;
+    color: #febf1a;
+    margin: 10px 0;
+}
+
+.footer-content .revision {
+    font-size: 0.8em;
+    color: #e1e8ed;
+}
+
+@media (min-width: 768px) {
+    .footer {
+        padding: 30px;
+    }
+    
+    .footer-content p {
+        font-size: 1em;
+    }
+    
+    .footer-content .revision {
+        font-size: 0.9em;
+    }
+}
+        .header {
+    animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(-20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
     </style>
 </head>
 <body>
@@ -799,6 +849,16 @@
                 <div class="label">Portfolio Status</div>
             </div>
         </div>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-content">
+        <p>Property of Alex Koh @ Family Investments and YouTube.</p>
+        <p class="disclaimer">Not financial advice—use at your own risk. Always consult with a qualified financial advisor before making investment decisions.</p>
+        <p class="revision">Revision V1.2 | 2025</p>
+    </div>
+</footer>
+
 
         <!-- Navigation Tabs -->
         <div class="tabs">
