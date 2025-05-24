@@ -769,18 +769,17 @@
 
         <!-- Save/Load Controls -->
         <div class="save-controls">
-            <div class="control-group">
-                <div class="save-status" id="saveStatus">✅ Auto-saved</div>
-                <button class="btn-file" onclick="exportPortfolio()">💾 Export Portfolio</button>
-            </div>
-            <div class="control-group">
-    <div class="file-input-wrapper">
-        <input type="file" id="fileInput" accept=".json" onchange="importPortfolio(event)">
-        <button class="btn-file" onclick="document.getElementById('fileInput').click()">📁 Import Portfolio</button>
+    <div class="control-group">
+        <div class="save-status" id="saveStatus">✅ Auto-saved</div>
+        <button class="btn-file" onclick="exportPortfolio()">💾 Export Portfolio</button>
     </div>
-    <button class="btn-file" onclick="clearAllData()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🗑️ Clear All</button>
+    <div class="control-group">
+        <input type="file" id="fileInput" accept=".json" onchange="importPortfolio(event)" class="btn-file" style="padding: 10px 20px; cursor: pointer; width: auto;">
+        <button class="btn-file" onclick="document.getElementById('fileInput').click()">📁 Import Portfolio</button>
+        <button class="btn-file" onclick="clearAllData()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🗑️ Clear All</button>
+        <button class="btn-file" onclick="testImport()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">🧪 Test Import</button>
+    </div>
 </div>
-        </div>
 
         <!-- Portfolio Summary -->
         <div id="portfolioSummary" class="summary-grid">
@@ -1447,6 +1446,75 @@
         showNotification('No file selected', 'error');
         return;
     }
+            function testImport() {
+    console.log('testImport function called');
+    const testJson = JSON.stringify({
+        portfolioState: {
+            age: 35,
+            clientName: 'Test Client',
+            currentTab: 'report',
+            targetAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
+            actualAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
+            categoryStocks: {
+                staples: [
+                    { name: 'Cash', dollars: 15000, id: 'staples-1' },
+                    { name: 'Gold ETF (GLD)', dollars: 5000, id: 'staples-2' }
+                ],
+                matureGrowth: [
+                    { name: 'Microsoft (MSFT)', dollars: 12500, id: 'mature-1' }
+                ],
+                highGrowth: [
+                    { name: 'Salesforce (CRM)', dollars: 10000, id: 'highgrowth-1' }
+                ],
+                highRisk: [
+                    { name: 'Cloudflare (NET)', dollars: 5000, id: 'highrisk-1' }
+                ]
+            }
+        },
+        timestamp: new Date().toISOString(),
+        version: '1.0'
+    });
+    
+    try {
+        const importedData = JSON.parse(testJson);
+        console.log('Test parsed data:', importedData);
+        
+        if (!importedData.portfolioState) {
+            throw new Error('Test import: Missing portfolioState');
+        }
+        
+        const requiredFields = ['age', 'clientName', 'currentTab', 'targetAllocations', 'actualAllocations', 'categoryStocks'];
+        const missingFields = requiredFields.filter(field => !importedData.portfolioState.hasOwnProperty(field));
+        if (missingFields.length > 0) {
+            throw new Error(`Test import: Missing fields: ${missingFields.join(', ')}`);
+        }
+        
+        console.log('Test updating portfolioState:', importedData.portfolioState);
+        portfolioState = importedData.portfolioState;
+        
+        const ageSlider = document.getElementById('ageSlider');
+        const clientNameInput = document.getElementById('clientNameInput');
+        const ageDisplay = document.getElementById('ageDisplay');
+        
+        if (ageSlider) ageSlider.value = portfolioState.age;
+        if (clientNameInput) clientNameInput.value = portfolioState.clientName || '';
+        if (ageDisplay) ageDisplay.textContent = portfolioState.age + ' years';
+        
+        updateTargetAllocations();
+        updateActualAllocations();
+        updatePortfolioSummary();
+        updateTabWarnings();
+        
+        console.log('Test refreshing UI for tab:', portfolioState.currentTab);
+        showTab(portfolioState.currentTab);
+        
+        saveToLocalStorage();
+        showNotification('Test portfolio imported successfully!', 'success');
+    } catch (error) {
+        console.error('Test import error:', error.message);
+        showNotification(`Test import error: ${error.message}`, 'error');
+    }
+}
     
     console.log('Import triggered, file:', file.name);
     
@@ -1520,12 +1588,28 @@
             clientName: '',
             currentTab: 'report',
             targetAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
-            actualAllocations: { staples: 0, matureGrowth: 0, highGrowth: 0, highRisk: 0 },
+            actualAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
             categoryStocks: {
-                staples: [],
-                matureGrowth: [],
-                highGrowth: [],
-                highRisk: []
+                staples: [
+                    { name: 'Cash', dollars: 15000, id: 'staples-1' },
+                    { name: 'Gold ETF (GLD)', dollars: 5000, id: 'staples-2' },
+                    { name: 'Johnson & Johnson (JNJ)', dollars: 10000, id: 'staples-3' },
+                    { name: 'Procter & Gamble (PG)', dollars: 10000, id: 'staples-4' }
+                ],
+                matureGrowth: [
+                    { name: 'Microsoft (MSFT)', dollars: 12500, id: 'mature-1' },
+                    { name: 'Apple (AAPL)', dollars: 7500, id: 'mature-2' },
+                    { name: 'Visa (V)', dollars: 5000, id: 'mature-3' }
+                ],
+                highGrowth: [
+                    { name: 'Salesforce (CRM)', dollars: 10000, id: 'highgrowth-1' },
+                    { name: 'Adobe (ADBE)', dollars: 8000, id: 'highgrowth-2' },
+                    { name: 'CrowdStrike (CRWD)', dollars: 7000, id: 'highgrowth-3' }
+                ],
+                highRisk: [
+                    { name: 'Cloudflare (NET)', dollars: 5000, id: 'highrisk-1' },
+                    { name: 'CRISPR (CRSP)', dollars: 5000, id: 'highrisk-2' }
+                ]
             }
         };
         
@@ -1538,10 +1622,9 @@
         updatePortfolioSummary();
         updateTabWarnings();
         
-        // Force UI refresh for the current tab
         showTab(portfolioState.currentTab);
-        
-        showNotification('All data cleared successfully', 'success');
+        saveToLocalStorage();
+        showNotification('All data cleared and reset to default', 'success');
     }
 }
 
@@ -2308,24 +2391,47 @@
 
         // Initialize the application
         function init() {
-            const hasLoadedData = loadFromLocalStorage();
-            
-            if (!hasLoadedData) {
-                updateTargetAllocations();
-                updateActualAllocations();
-                saveToLocalStorage();
+    const hasLoadedData = loadFromLocalStorage();
+    
+    if (!hasLoadedData) {
+        portfolioState = {
+            age: 35,
+            clientName: '',
+            currentTab: 'report',
+            targetAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
+            actualAllocations: { staples: 40, matureGrowth: 25, highGrowth: 25, highRisk: 10 },
+            categoryStocks: {
+                staples: [
+                    { name: 'Cash', dollars: 15000, id: 'staples-1' },
+                    { name: 'Gold ETF (GLD)', dollars: 5000, id: 'staples-2' },
+                    { name: 'Johnson & Johnson (JNJ)', dollars: 10000, id: 'staples-3' },
+                    { name: 'Procter & Gamble (PG)', dollars: 10000, id: 'staples-4' }
+                ],
+                matureGrowth: [
+                    { name: 'Microsoft (MSFT)', dollars: 12500, id: 'mature-1' },
+                    { name: 'Apple (AAPL)', dollars: 7500, id: 'mature-2' },
+                    { name: 'Visa (V)', dollars: 5000, id: 'mature-3' }
+                ],
+                highGrowth: [
+                    { name: 'Salesforce (CRM)', dollars: 10000, id: 'highgrowth-1' },
+                    { name: 'Adobe (ADBE)', dollars: 8000, id: 'highgrowth-2' },
+                    { name: 'CrowdStrike (CRWD)', dollars: 7000, id: 'highgrowth-3' }
+                ],
+                highRisk: [
+                    { name: 'Cloudflare (NET)', dollars: 5000, id: 'highrisk-1' },
+                    { name: 'CRISPR (CRSP)', dollars: 5000, id: 'highrisk-2' }
+                ]
             }
-            
-            updatePortfolioSummary();
-            updateTabWarnings();
-            updateReportContent();
-            
-            localStorage.setItem('portfolioPyramidData', JSON.stringify({
-                portfolioState: portfolioState,
-                timestamp: new Date().toISOString(),
-                version: '1.0'
-            }));
-        }
+        };
+        updateTargetAllocations();
+        updateActualAllocations();
+        saveToLocalStorage();
+    }
+    
+    updatePortfolioSummary();
+    updateTabWarnings();
+    updateReportContent();
+}
 
         // Start the application
         window.onload = init;
