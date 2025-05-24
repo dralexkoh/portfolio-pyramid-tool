@@ -1471,7 +1471,8 @@
                 updatePortfolioSummary();
                 updateTabWarnings();
                 
-                showTab(portfolioState.currentTab); // Force UI refresh
+                // Force UI refresh for the current tab
+                showTab(portfolioState.currentTab);
                 
                 saveToLocalStorage();
                 showNotification('Portfolio imported successfully!', 'success');
@@ -1513,7 +1514,9 @@
         updateActualAllocations();
         updatePortfolioSummary();
         updateTabWarnings();
-        updateReportContent();
+        
+        // Force UI refresh for the current tab
+        showTab(portfolioState.currentTab);
         
         showNotification('All data cleared successfully', 'success');
     }
