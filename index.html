@@ -774,12 +774,12 @@
                 <button class="btn-file" onclick="exportPortfolio()">💾 Export Portfolio</button>
             </div>
             <div class="control-group">
-                <div class="file-input-wrapper">
-                    <input type="file" id="fileInput" accept=".json" onchange="importPortfolio(event)">
-                    <button class="btn-file">📁 Import Portfolio</button>
-                </div>
-                <button class="btn-file" onclick="clearAllData()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🗑️ Clear All</button>
-            </div>
+    <div class="file-input-wrapper">
+        <input type="file" id="fileInput" accept=".json" onchange="importPortfolio(event)">
+        <button class="btn-file" onclick="document.getElementById('fileInput').click()">📁 Import Portfolio</button>
+    </div>
+    <button class="btn-file" onclick="clearAllData()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🗑️ Clear All</button>
+</div>
         </div>
 
         <!-- Portfolio Summary -->
@@ -1440,12 +1440,18 @@
 }
 
         function importPortfolio(event) {
+    console.log('importPortfolio function called');
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) {
+        console.log('No file selected');
+        showNotification('No file selected', 'error');
+        return;
+    }
     
     console.log('Import triggered, file:', file.name);
     
     if (!file.name.toLowerCase().endsWith('.json')) {
+        console.log('Invalid file type:', file.name);
         showNotification('Please select a valid .json file', 'error');
         event.target.value = '';
         return;
@@ -1458,31 +1464,48 @@
             const importedData = JSON.parse(e.target.result);
             console.log('Parsed data:', importedData);
             
-            if (importedData.portfolioState) {
-                console.log('Updating portfolioState:', importedData.portfolioState);
-                portfolioState = importedData.portfolioState;
-                
-                document.getElementById('ageSlider').value = portfolioState.age;
-                document.getElementById('clientNameInput').value = portfolioState.clientName || '';
-                document.getElementById('ageDisplay').textContent = portfolioState.age + ' years';
-                
-                updateTargetAllocations();
-                updateActualAllocations();
-                updatePortfolioSummary();
-                updateTabWarnings();
-                
-                // Force UI refresh for the current tab
-                showTab(portfolioState.currentTab);
-                
-                saveToLocalStorage();
-                showNotification('Portfolio imported successfully!', 'success');
-            } else {
-                throw new Error('Invalid file format');
+            if (!importedData.portfolioState) {
+                throw new Error('Invalid file format: Missing portfolioState');
             }
+            
+            // Validate portfolioState structure
+            const requiredFields = ['age', 'clientName', 'currentTab', 'targetAllocations', 'actualAllocations', 'categoryStocks'];
+            const missingFields = requiredFields.filter(field => !importedData.portfolioState.hasOwnProperty(field));
+            if (missingFields.length > 0) {
+                throw new Error(`Invalid file format: Missing fields: ${missingFields.join(', ')}`);
+            }
+            
+            console.log('Updating portfolioState:', importedData.portfolioState);
+            portfolioState = importedData.portfolioState;
+            
+            // Update UI elements
+            const ageSlider = document.getElementById('ageSlider');
+            const clientNameInput = document.getElementById('clientNameInput');
+            const ageDisplay = document.getElementById('ageDisplay');
+            
+            if (ageSlider) ageSlider.value = portfolioState.age;
+            if (clientNameInput) clientNameInput.value = portfolioState.clientName || '';
+            if (ageDisplay) ageDisplay.textContent = portfolioState.age + ' years';
+            
+            updateTargetAllocations();
+            updateActualAllocations();
+            updatePortfolioSummary();
+            updateTabWarnings();
+            
+            // Force UI refresh for the current tab
+            console.log('Refreshing UI for tab:', portfolioState.currentTab);
+            showTab(portfolioState.currentTab);
+            
+            saveToLocalStorage();
+            showNotification('Portfolio imported successfully!', 'success');
         } catch (error) {
-            console.error('Import error:', error);
-            showNotification('Error importing portfolio. Please check file format.', 'error');
+            console.error('Import error:', error.message);
+            showNotification(`Error importing portfolio: ${error.message}`, 'error');
         }
+    };
+    reader.onerror = function(e) {
+        console.error('FileReader error:', e);
+        showNotification('Error reading file', 'error');
     };
     reader.readAsText(file);
     event.target.value = '';
