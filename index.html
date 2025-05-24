@@ -1440,13 +1440,117 @@
 
         function importPortfolio(event) {
     console.log('importPortfolio function called');
-    const file = event.target.files[0];
+    const fileInput = event.target;
+    const file = fileInput.files[0];
     if (!file) {
         console.log('No file selected');
         showNotification('No file selected', 'error');
         return;
     }
-            function testImport() {
+    
+    console.log('Import triggered, file:', file.name);
+    
+    if (!file.name.toLowerCase().endsWith('.json')) {
+        console.log('Invalid file type:', file.name);
+        showNotification('Please select a valid .json file', 'error');
+        fileInput.value = ''; // Clear the file input
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        console.log('File read, content length:', e.target.result.length);
+        try {
+            const importedData = JSON.parse(e.target.result);
+            console.log('Parsed data:', importedData);
+            
+            if (!importedData.portfolioState) {
+                throw new Error('Invalid file format: Missing portfolioState');
+            }
+            
+            // Validate portfolioState structure
+            const requiredFields = ['age', 'clientName', 'currentTab', 'targetAllocations', 'actualAllocations', 'categoryStocks'];
+            const missingFields = requiredFields.filter(field => !importedData.portfolioState.hasOwnProperty(field));
+            if (missingFields.length > 0) {
+                throw new Error(`Invalid file format: Missing fields: ${missingFields.join(', ')}`);
+            }
+            
+            // Validate nested structures
+            const allocationsFields = ['staples', 'matureGrowth', 'highGrowth', 'highRisk'];
+            for (const field of allocationsFields) {
+                if (!importedData.portfolioState.targetAllocations[field] || !importedData.portfolioState.actualAllocations[field]) {
+                    throw new Error(`Invalid allocations: Missing ${field} in target or actual allocations`);
+                }
+                if (!Array.isArray(importedData.portfolioState.categoryStocks[field])) {
+                    throw new Error(`Invalid categoryStocks: ${field} is not an array`);
+                }
+            }
+            
+            console.log('Updating portfolioState:', importedData.portfolioState);
+            portfolioState = importedData.portfolioState;
+            
+            // Update UI elements safely
+            const ageSlider = document.getElementById('ageSlider');
+            const clientNameInput = document.getElementById('clientNameInput');
+            const ageDisplay = document.getElementById('ageDisplay');
+            
+            if (ageSlider) {
+                ageSlider.value = portfolioState.age;
+                console.log('Updated ageSlider to:', portfolioState.age);
+            } else {
+                console.warn('ageSlider element not found');
+            }
+            
+            if (clientNameInput) {
+                clientNameInput.value = portfolioState.clientName || '';
+                console.log('Updated clientNameInput to:', portfolioState.clientName);
+            } else {
+                console.warn('clientNameInput element not found');
+            }
+            
+            if (ageDisplay) {
+                ageDisplay.textContent = portfolioState.age + ' years';
+                console.log('Updated ageDisplay to:', portfolioState.age + ' years');
+            } else {
+                console.warn('ageDisplay element not found');
+            }
+            
+            updateTargetAllocations();
+            console.log('Target allocations updated');
+            
+            updateActualAllocations();
+            console.log('Actual allocations updated');
+            
+            updatePortfolioSummary();
+            console.log('Portfolio summary updated');
+            
+            updateTabWarnings();
+            console.log('Tab warnings updated');
+            
+            // Force UI refresh for the current tab
+            console.log('Refreshing UI for tab:', portfolioState.currentTab);
+            showTab(portfolioState.currentTab);
+            
+            saveToLocalStorage();
+            console.log('Saved to localStorage');
+            
+            showNotification('Portfolio imported successfully!', 'success');
+        } catch (error) {
+            console.error('Import error:', error.message);
+            showNotification(`Error importing portfolio: ${error.message}`, 'error');
+        } finally {
+            fileInput.value = ''; // Clear the file input after processing
+        }
+    };
+    reader.onerror = function(e) {
+        console.error('FileReader error:', e);
+        showNotification('Error reading file: Failed to read the file. Please try again.', 'error');
+        fileInput.value = ''; // Clear the file input on error
+    };
+    reader.readAsText(file);
+}
+
+        function testImport() {
     console.log('testImport function called');
     const testJson = JSON.stringify({
         portfolioState: {
@@ -1514,69 +1618,6 @@
         console.error('Test import error:', error.message);
         showNotification(`Test import error: ${error.message}`, 'error');
     }
-}
-    
-    console.log('Import triggered, file:', file.name);
-    
-    if (!file.name.toLowerCase().endsWith('.json')) {
-        console.log('Invalid file type:', file.name);
-        showNotification('Please select a valid .json file', 'error');
-        event.target.value = '';
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        console.log('File read, content length:', e.target.result.length);
-        try {
-            const importedData = JSON.parse(e.target.result);
-            console.log('Parsed data:', importedData);
-            
-            if (!importedData.portfolioState) {
-                throw new Error('Invalid file format: Missing portfolioState');
-            }
-            
-            // Validate portfolioState structure
-            const requiredFields = ['age', 'clientName', 'currentTab', 'targetAllocations', 'actualAllocations', 'categoryStocks'];
-            const missingFields = requiredFields.filter(field => !importedData.portfolioState.hasOwnProperty(field));
-            if (missingFields.length > 0) {
-                throw new Error(`Invalid file format: Missing fields: ${missingFields.join(', ')}`);
-            }
-            
-            console.log('Updating portfolioState:', importedData.portfolioState);
-            portfolioState = importedData.portfolioState;
-            
-            // Update UI elements
-            const ageSlider = document.getElementById('ageSlider');
-            const clientNameInput = document.getElementById('clientNameInput');
-            const ageDisplay = document.getElementById('ageDisplay');
-            
-            if (ageSlider) ageSlider.value = portfolioState.age;
-            if (clientNameInput) clientNameInput.value = portfolioState.clientName || '';
-            if (ageDisplay) ageDisplay.textContent = portfolioState.age + ' years';
-            
-            updateTargetAllocations();
-            updateActualAllocations();
-            updatePortfolioSummary();
-            updateTabWarnings();
-            
-            // Force UI refresh for the current tab
-            console.log('Refreshing UI for tab:', portfolioState.currentTab);
-            showTab(portfolioState.currentTab);
-            
-            saveToLocalStorage();
-            showNotification('Portfolio imported successfully!', 'success');
-        } catch (error) {
-            console.error('Import error:', error.message);
-            showNotification(`Error importing portfolio: ${error.message}`, 'error');
-        }
-    };
-    reader.onerror = function(e) {
-        console.error('FileReader error:', e);
-        showNotification('Error reading file', 'error');
-    };
-    reader.readAsText(file);
-    event.target.value = '';
 }
 
         function clearAllData() {
